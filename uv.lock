@@ -169,6 +169,31 @@ wheels = [
 ]
 
 [[package]]
+name = "click-compose"
+version = "2025.10.27.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beartype" },
+    { name = "click" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/45/9f/7b380e5318643348e256ec31df1362b74dfa12733f76b1a97e1171ba74fe/click_compose-2025.10.27.3.tar.gz", hash = "sha256:6d3326a13b690ac7a0f0e99de785aa78ea81d130ba02d609e6367a7af23477a5", size = 18056, upload-time = "2025-10-27T11:49:45.228Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/45/3a/411c2ad30f87b2e874a4a4d1578dc9fe11a6ea8f139b4e1f7ff291a934ca/click_compose-2025.10.27.3-py2.py3-none-any.whl", hash = "sha256:6821fb769067e76d2b2e9c5d4d5e8d974002137322ab71cde65b10bf9c025834", size = 4731, upload-time = "2025-10-27T11:49:43.857Z" },
+]
+
+[[package]]
+name = "cloup"
+version = "3.0.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/cf/09a31f0f51b5c8ef2343baf37c35a5feb4f6dfdcbd0592a014baf837f2e4/cloup-3.0.8.tar.gz", hash = "sha256:f91c080a725196ddf74feabd6250266f466e97fc16dfe21a762cf6bc6beb3ecb", size = 229657, upload-time = "2025-08-05T02:25:02.83Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/45/0a/494a923f90cd97cdf4fb989cfd06ac0c6745f6dfb8adcef1b7f99d3c7834/cloup-3.0.8-py2.py3-none-any.whl", hash = "sha256:6fe9474dc44fa06f8870e9c797f005de1e3ef891ddc1a9612d9b58598a038323", size = 54647, upload-time = "2025-08-05T02:25:01.536Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -268,6 +293,25 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/96/8e/709914eb2b5749865801041647dc7f4e6d00b549cfe88b65ca192995f07c/distlib-0.4.0.tar.gz", hash = "sha256:feec40075be03a04501a973d81f633735b4b69f98b05450592310c0f401a4e0d", size = 614605, upload-time = "2025-07-17T16:52:00.465Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/33/6b/e0547afaf41bf2c42e52430072fa5658766e3d65bd4b03a563d1b6336f57/distlib-0.4.0-py2.py3-none-any.whl", hash = "sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16", size = 469047, upload-time = "2025-07-17T16:51:58.613Z" },
+]
+
+[[package]]
+name = "doccmd"
+version = "2026.1.27.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beartype" },
+    { name = "charset-normalizer" },
+    { name = "click" },
+    { name = "click-compose" },
+    { name = "cloup" },
+    { name = "pygments" },
+    { name = "sybil" },
+    { name = "sybil-extras" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a7/e5/f1e58a1e0238a20c16e5400b5135a8814a94439a058e80b5d0433d5bf696/doccmd-2026.1.27.2.tar.gz", hash = "sha256:cd765339562a401a7c361f285b9d5e7fa10a29a5d89f84d9c8916c2bcefbb4d1", size = 180857, upload-time = "2026-01-27T06:26:53.155Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/32/1d/881eef509cd3ecbe222807f6b33529fe2e3b5c73c72c877f94005d728946/doccmd-2026.1.27.2-py2.py3-none-any.whl", hash = "sha256:8fabdf3a614c6075815bbe20d7d6f69a4ea1789cefd20efbc3cc3543beaf71b2", size = 18479, upload-time = "2026-01-27T06:26:51.208Z" },
 ]
 
 [[package]]
@@ -559,6 +603,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "doccmd" },
     { name = "furo" },
     { name = "pre-commit" },
     { name = "pyright" },
@@ -578,6 +623,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "beartype", specifier = ">=0.18" },
+    { name = "doccmd", marker = "extra == 'dev'", specifier = "==2026.1.27.2" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "==4.5.1" },
@@ -1163,6 +1209,20 @@ wheels = [
 [package.optional-dependencies]
 pytest = [
     { name = "pytest" },
+]
+
+[[package]]
+name = "sybil-extras"
+version = "2026.1.22"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beartype" },
+    { name = "markdown-it-py" },
+    { name = "sybil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b0/7b/972027f1594400d9671c3b26eb38ef41fefe114efda1579f99240a063072/sybil_extras-2026.1.22.tar.gz", hash = "sha256:d063567d694946ad1e093dd96a6c512bf80d04f46e9a747080dcb043c2128c5d", size = 74720, upload-time = "2026-01-22T12:46:24.191Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9f/df/c62aad2dabb3d47c7ce020f8bc93eb664346127722bc4138f261febea828/sybil_extras-2026.1.22-py2.py3-none-any.whl", hash = "sha256:6d2688495bd071230460d0a91e1ce1e84a2f800501c9e6fbde3d7f2825a3bca1", size = 57624, upload-time = "2026-01-22T12:46:22.76Z" },
 ]
 
 [[package]]
