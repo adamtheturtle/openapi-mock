@@ -10,6 +10,78 @@ import yaml
 from beartype import beartype
 
 
+def _generate_from_schema(schema: dict[str, Any]) -> Any:
+    """
+    Generate mock JSON from a JSON Schema (OpenAPI 3.x schema subset).
+
+    Handles type, properties, items. Does not resolve $ref.
+    """
+    schema_type = schema.get("type")
+    if schema_type == "object":
+        result: dict[str, Any] = {}
+        for prop_name, prop_schema in (schema.get("properties") or {}).items():
+            if isinstance(prop_schema, dict):
+                result[prop_name] = _generate_from_schema(prop_schema)
+        return result
+    if schema_type == "array":
+        items = schema.get("items")
+        if isinstance(items, dict):
+            return [_generate_from_schema(items)]
+        return []
+    if schema_type == "string":
+        return ""
+    if schema_type in ("number", "integer"):
+        return 0
+    if schema_type == "boolean":
+        return False
+    if schema_type == "null":
+        return None
+    return {}
+
+
+def _get_response_body(operation: dict[str, Any]) -> tuple[int, Any]:
+    """
+    Get (status_code, json_body) for the best response in an operation.
+
+    Prefers 200, then 201, then first 2xx, then first response.
+    Uses example if present, else generates from schema.
+    """
+    responses = operation.get("responses") or {}
+    if not responses:
+        return 200, {}
+
+    # Prefer 200, then 201, then first 2xx, then first
+    for preferred in ("200", "201"):
+        if preferred in responses:
+            status_key = preferred
+            break
+    else:
+        for key in responses:
+            if key.isdigit() and 200 <= int(key) < 300:
+                status_key = key
+                break
+        else:
+            status_key = next(iter(responses), "200")
+
+    response = responses.get(status_key, {})
+    if not isinstance(response, dict):
+        return int(status_key) if status_key.isdigit() else 200, {}
+
+    content = response.get("content", {}) or {}
+    json_content = content.get("application/json") or {}
+    if not isinstance(json_content, dict):
+        return int(status_key) if status_key.isdigit() else 200, {}
+
+    if "example" in json_content:
+        return int(status_key) if status_key.isdigit() else 200, json_content["example"]
+    if "schema" in json_content:
+        return (
+            int(status_key) if status_key.isdigit() else 200,
+            _generate_from_schema(json_content["schema"]),
+        )
+    return int(status_key) if status_key.isdigit() else 200, {}
+
+
 @beartype
 def load_spec(path: str | Path) -> dict[str, Any]:
     """
@@ -57,7 +129,8 @@ def add_openapi_to_respx(
             if not isinstance(operation, dict):
                 continue
 
+            status_code, json_body = _get_response_body(operation)
             mock_obj.route(
                 method=method.upper(),
                 path=path,
-            ).mock(return_value=httpx.Response(200, json={}))
+            ).mock(return_value=httpx.Response(status_code, json=json_body))
