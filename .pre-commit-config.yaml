@@ -1,3 +1,4 @@
+---
 ci:
   skip:
     - pyright-verifytypes
@@ -32,12 +33,47 @@ repos:
         args: [--fix]
       - id: ruff-format
   - repo: https://github.com/regebro/pyroma
-    rev: "5.0.1"
+    rev: 5.0.1
     hooks:
       - id: pyroma
-        args: ["--min=10", "."]
+        args: [--min=10, .]
   - repo: local
     hooks:
+      - id: doc8
+        name: doc8
+        entry: uv run --extra=dev doc8 docs/source/
+        language: python
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: interrogate
+        name: interrogate
+        entry: uv run --extra=dev interrogate -v src/ tests/
+        language: python
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pydocstringformatter
+        name: pydocstringformatter
+        entry: uv run --extra=dev pydocstringformatter src/ tests/
+        language: python
+        types: [python]
+        additional_dependencies: [uv==0.9.5]
+
+      - id: vulture
+        name: vulture
+        entry: uv run --extra=dev vulture src/
+        language: python
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: yamlfix
+        name: yamlfix
+        entry: uv run --extra=dev yamlfix
+        language: python
+        types: [yaml]
+        additional_dependencies: [uv==0.9.5]
+
       - id: pyproject-fmt
         name: pyproject-fmt
         entry: uv run --extra=dev pyproject-fmt
@@ -69,14 +105,16 @@ repos:
 
       - id: pyright-docs
         name: pyright-docs
-        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python --command="pyright"
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="pyright"
         language: python
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
 
       - id: linkcheck
         name: linkcheck
-        entry: uv run --extra=dev sphinx-build -M linkcheck docs/source docs/build -W
+        entry: uv run --extra=dev sphinx-build -M linkcheck docs/source docs/build
+          -W
         language: python
         types_or: [rst]
         stages: [manual]
@@ -85,7 +123,8 @@ repos:
 
       - id: spelling
         name: spelling
-        entry: uv run --extra=dev sphinx-build -M spelling docs/source docs/build -W
+        entry: uv run --extra=dev sphinx-build -M spelling docs/source docs/build
+          -W
         language: python
         types_or: [rst]
         stages: [manual]

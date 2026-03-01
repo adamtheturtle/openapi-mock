@@ -16,7 +16,7 @@ jobs:
   build:
     strategy:
       matrix:
-        python-version: ["3.12", "3.13"]
+        python-version: ['3.12', '3.13']
         platform: [ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.platform }}
@@ -31,10 +31,11 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-          cache-dependency-glob: "**/pyproject.toml"
+          cache-dependency-glob: '**/pyproject.toml'
 
       - name: Run tests
-        run: uv run --extra=dev pytest -s -vvv --cov-fail-under 100 --cov=src/ --cov=tests .
+        run: uv run --extra=dev pytest -s -vvv --cov-fail-under 100 --cov=src/ --cov=tests
+          .
         env:
           UV_PYTHON: ${{ matrix.python-version }}
 
@@ -44,7 +45,7 @@ jobs:
     if: always()
     steps:
       - name: Check matrix job status
-        run: |
+        run: |-
           if [ "${{ needs.build.result }}" != "success" ]; then
             echo "One or more matrix jobs failed"
             exit 1
