@@ -1,6 +1,9 @@
 """Parametrized tests that run with both respx and responses backends."""
 
+from __future__ import annotations
+
 from http import HTTPStatus
+from typing import Any
 
 import httpx
 import pytest
@@ -14,7 +17,10 @@ BASE_URL = "https://api.example.com"
 
 
 def _run_respx(
-    spec: dict, url: str, method: str = "GET", params: dict | None = None
+    spec: dict[str, Any],
+    url: str,
+    method: str = "GET",
+    params: dict[str, Any] | None = None,
 ) -> tuple[int, object]:
     """Run a request against the respx backend."""
     with respx.mock(base_url=BASE_URL, assert_all_called=False) as m:
@@ -27,20 +33,27 @@ def _run_respx(
 
 
 def _run_responses(
-    spec: dict, url: str, method: str = "GET", params: dict | None = None
+    spec: dict[str, Any],
+    url: str,
+    method: str = "GET",
+    params: dict[str, Any] | None = None,
 ) -> tuple[int, object]:
     """Run a request against the responses backend."""
     with responses.RequestsMock() as rsps:
         add_openapi_to_responses(spec=spec, base_url=BASE_URL, mock=rsps)
         if method == "GET":
-            resp = requests.get(url, params=params)
+            resp = requests.get(url=url, params=params)
         else:
-            resp = requests.post(url, json=params or {})
+            resp = requests.post(url=url, json=params or {})
     return resp.status_code, resp.json()
 
 
 def _run(
-    backend: str, spec: dict, url: str, method: str = "GET", params: dict | None = None
+    backend: str,
+    spec: dict[str, Any],
+    url: str,
+    method: str = "GET",
+    params: dict[str, Any] | None = None,
 ) -> tuple[int, object]:
     """Run a request against the given backend."""
     if backend == "respx":
@@ -48,7 +61,7 @@ def _run(
     return _run_responses(spec=spec, url=url, method=method, params=params)
 
 
-@pytest.mark.parametrize("backend", ["respx", "responses"])
+@pytest.mark.parametrize(argnames="backend", argvalues=["respx", "responses"])
 def test_simple_path(backend: str) -> None:
     """A simple GET path is mocked (both backends)."""
     spec = {
@@ -72,7 +85,7 @@ def test_simple_path(backend: str) -> None:
     assert body == {}
 
 
-@pytest.mark.parametrize("backend", ["respx", "responses"])
+@pytest.mark.parametrize(argnames="backend", argvalues=["respx", "responses"])
 def test_path_param(backend: str) -> None:
     """Path params are matched (respx natively, responses via regex)."""
     spec = {
@@ -98,7 +111,7 @@ def test_path_param(backend: str) -> None:
     assert body == {"id": 1, "name": "Fluffy"}
 
 
-@pytest.mark.parametrize("backend", ["respx", "responses"])
+@pytest.mark.parametrize(argnames="backend", argvalues=["respx", "responses"])
 def test_path_with_dots(backend: str) -> None:
     """Literal path segments (e.g. v1.0) match exactly."""
     spec = {
@@ -122,7 +135,39 @@ def test_path_with_dots(backend: str) -> None:
     assert body == {"version": "1.0"}
 
 
-@pytest.mark.parametrize("backend", ["respx", "responses"])
+@pytest.mark.parametrize(argnames="backend", argvalues=["respx", "responses"])
+def test_post_path(backend: str) -> None:
+    """A POST path is mocked (both backends)."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "post": {
+                    "responses": {
+                        "201": {
+                            "content": {
+                                "application/json": {
+                                    "example": {"id": 1, "name": "Fluffy"}
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    status, body = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        method="POST",
+        params={"name": "Fluffy"},
+    )
+    assert status == HTTPStatus.CREATED
+    assert body == {"id": 1, "name": "Fluffy"}
+
+
+@pytest.mark.parametrize(argnames="backend", argvalues=["respx", "responses"])
 def test_query_params(backend: str) -> None:
     """URLs with query strings (e.g. ?limit=10) are matched."""
     spec = {
@@ -148,7 +193,7 @@ def test_query_params(backend: str) -> None:
     assert body == []
 
 
-@pytest.mark.parametrize("backend", ["respx", "responses"])
+@pytest.mark.parametrize(argnames="backend", argvalues=["respx", "responses"])
 def test_skips_invalid(backend: str) -> None:
     """Skips non-dict path items and non-HTTP methods."""
     spec = {
