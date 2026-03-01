@@ -1,6 +1,7 @@
 ci:
   skip:
     - pyright-verifytypes
+    - pyright-docs
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -39,4 +40,11 @@ repos:
         entry: uv run --extra=dev -m pyright --ignoreexternal --verifytypes openapi_mock
         language: python
         pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pyright-docs
+        name: pyright-docs
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python --command="pyright"
+        language: python
+        types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
