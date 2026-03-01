@@ -59,7 +59,9 @@ intersphinx_mapping = {
 }
 
 nitpicky = True
-# respx/httpx don't publish intersphinx inventories; ignore refs to their types
+# respx/httpx don't publish intersphinx inventories; ignore refs to their types.
+# See https://github.com/encode/httpx/discussions/3091 and
+# https://github.com/lundberg/respx/issues/305
 nitpick_ignore = [
     ("py:class", "respx.router.MockRouter"),
     ("py:class", "respx.router.Router"),
