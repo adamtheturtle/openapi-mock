@@ -206,7 +206,9 @@ def add_openapi_to_responses(
                 continue
 
             status_code, json_body = _get_response_body(operation)
-            code = int(status_code) if isinstance(status_code, HTTPStatus) else status_code
+            code = (
+                int(status_code) if isinstance(status_code, HTTPStatus) else status_code
+            )
             url_pattern = _path_to_url_pattern(base_url, path)
             responses_mod.add(
                 method=method.upper(),
