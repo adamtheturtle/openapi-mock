@@ -1,0 +1,46 @@
+---
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read  # required for checkout
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
+
+      - name: Run pre-commit
+        run: uv run --extra=dev pre-commit run --all-files
+
+      - uses: pre-commit-ci/lite-action@v1.1.0
+        if: always()
+
+  completion-lint:
+    needs: lint
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check lint job status
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ]; then
+            echo "Lint job failed"
+            exit 1
+          fi
