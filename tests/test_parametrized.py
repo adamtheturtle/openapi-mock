@@ -45,9 +45,9 @@ def _run_responses(
     with responses.RequestsMock() as rsps:
         add_openapi_to_responses(spec=spec, base_url=BASE_URL, mock=rsps)
         if method == "GET":
-            resp = requests.get(url=url, params=params)
+            resp = requests.get(url=url, params=params, timeout=30)
         else:
-            resp = requests.post(url=url, json=params or {})
+            resp = requests.post(url=url, json=params or {}, timeout=30)
     return resp.status_code, resp.json()
 
 
@@ -218,3 +218,4 @@ def test_skips_invalid(backend: str) -> None:
     }
     status, body = _run(backend=backend, spec=spec, url=f"{BASE_URL}/valid")
     assert status == HTTPStatus.OK
+    assert body == {}
