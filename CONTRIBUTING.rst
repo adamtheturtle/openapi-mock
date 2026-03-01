@@ -22,3 +22,10 @@ Linting
 
    uv run ruff check .
    uv run ruff format --check .
+
+Type checking
+-------------
+
+.. code-block:: console
+
+   uv run pyright --ignoreexternal --verifytypes openapi_mock
