@@ -6,6 +6,7 @@ on:
     types: [published]
 
 permissions:
+  contents: read  # required for checkout
   id-token: write
 
 jobs:
