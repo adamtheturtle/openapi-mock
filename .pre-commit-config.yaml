@@ -34,3 +34,10 @@ repos:
     hooks:
       - id: pyroma
         args: ["--min=10", "."]
+  - repo: local
+    hooks:
+      - id: pyright-verifytypes
+        name: pyright verifytypes
+        entry: uv run pyright --ignoreexternal --verifytypes openapi_mock
+        language: system
+        pass_filenames: false
