@@ -19,6 +19,7 @@ author = _pyproject_config.author
 extensions = [
     "sphinx_copybutton",
     "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinxcontrib.spelling",
     "sphinx_substitution_extensions",
@@ -52,6 +53,17 @@ html_theme_options = {
 }
 
 htmlhelp_basename = "openapimockdoc"
+
+intersphinx_mapping = {
+    "python": (f"https://docs.python.org/{minimum_python_version}", None),
+}
+
+nitpicky = True
+# respx/httpx don't publish intersphinx inventories; ignore refs to their types
+nitpick_ignore = [
+    ("py:class", "respx.router.MockRouter"),
+    ("py:class", "respx.router.Router"),
+]
 
 spelling_word_list_filename = "../../spelling_private_dict.txt"
 
