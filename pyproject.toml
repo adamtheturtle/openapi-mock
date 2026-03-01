@@ -24,6 +24,7 @@ fallback_version = "0.0.0"
 
 [tool.pytest.ini_options]
 xfail_strict = true
+log_cli = true
 
 [tool.ruff]
 target-version = "py312"
@@ -39,26 +40,15 @@ max_supported_python = "3.14"
 
 [tool.coverage.run]
 source = ["src/openapi_mock"]
+branch = true
 
 [tool.coverage.report]
 fail_under = 100
+exclude_also = ["if TYPE_CHECKING:"]
+show_missing = true
 
 [tool.mypy]
 exclude = ["build", ".venv"]
 
 [tool.pyright]
 exclude = ["build", ".venv"]
-
-[tool.check-manifest]
-ignore = [
-    ".prettierrc",
-    ".pre-commit-config.yaml",
-    ".vscode/*.json",
-    "CHANGELOG.rst",
-    "CODE_OF_CONDUCT.rst",
-    "CONTRIBUTING.rst",
-    "LICENSE",
-    ".git_archival.txt",
-    "tests",
-    "tests/**",
-]
