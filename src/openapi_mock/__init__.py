@@ -168,12 +168,16 @@ def add_openapi_to_respx(
                 mock_obj.route(
                     method=method.upper(),
                     path__regex=re.compile(pattern=f"^{path_pattern}$"),
-                ).mock(return_value=httpx.Response(status_code=status_code, json=json_body))
+                ).mock(
+                    return_value=httpx.Response(status_code=status_code, json=json_body)
+                )
             else:
                 mock_obj.route(
                     method=method.upper(),
                     path=path,
-                ).mock(return_value=httpx.Response(status_code=status_code, json=json_body))
+                ).mock(
+                    return_value=httpx.Response(status_code=status_code, json=json_body)
+                )
 
 
 def _path_to_pattern(path: str) -> str:
