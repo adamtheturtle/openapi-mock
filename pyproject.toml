@@ -93,7 +93,11 @@ lint.mccabe.max-complexity = 12
     "import-outside-toplevel",
     "reimported",
 ]
-"MESSAGES CONTROL".per-file-ignores = [ "docs/source/conf.py:invalid-name" ]
+"MESSAGES CONTROL".per-file-ignores = [
+    "docs/source/conf.py:invalid-name",
+    "docs/source/doccmd_*.py:missing-module-docstring,invalid-name",
+    "doccmd_README_rst_*.py:missing-module-docstring,invalid-name",
+]
 "SPELLING".spelling-dict = "en_US"
 "SPELLING".spelling-private-dict-file = "spelling_private_dict.txt"
 "SPELLING".spelling-store-unknown-words = "no"
