@@ -51,8 +51,8 @@ ignore = [
     "CHANGELOG.rst",
     "CODE_OF_CONDUCT.rst",
     "CONTRIBUTING.rst",
-    "LICENSE",
     ".git_archival.txt",
+    "uv.lock",
     "tests",
     "tests/**",
 ]
