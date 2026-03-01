@@ -1,5 +1,6 @@
 """Configuration for Sphinx."""
 
+import os
 import importlib.metadata
 from pathlib import Path
 
@@ -16,10 +17,10 @@ _pyproject_config = SphinxConfig(
 project = _pyproject_config.name
 author = _pyproject_config.author
 
-# Validate version - reject 0.x (indicates missing git tags)
+# Validate version - reject 0.x (indicates missing git tags), except in CI
 _version_string = importlib.metadata.version(distribution_name=project)
 _version = Version(version=_version_string)
-if _version.release[0] == 0:
+if _version.release[0] == 0 and not os.environ.get("CI"):
     msg = (
         f"The version is {_version_string}. "
         "This indicates that the version is not set correctly. "
