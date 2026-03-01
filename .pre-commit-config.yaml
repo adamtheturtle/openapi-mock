@@ -5,11 +5,8 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
-  - repo: local
+  - repo: https://github.com/regebro/pyroma
+    rev: "5.0.1"
     hooks:
       - id: pyroma
-        name: pyroma
-        entry: pyroma --min 10 .
-        language: python
-        pass_filenames: false
-        additional_dependencies: [pyroma]
+        args: ["--min=10", "."]
