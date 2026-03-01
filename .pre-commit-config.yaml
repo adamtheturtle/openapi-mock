@@ -2,6 +2,8 @@ ci:
   skip:
     - pyright-verifytypes
     - pyright-docs
+    - check-manifest
+    - deptry
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -35,6 +37,20 @@ repos:
         args: ["--min=10", "."]
   - repo: local
     hooks:
+      - id: check-manifest
+        name: check-manifest
+        entry: uv run --extra=dev -m check_manifest
+        language: python
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: deptry
+        name: deptry
+        entry: uv run --extra=dev -m deptry src/
+        language: python
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
       - id: pyright-verifytypes
         name: pyright verifytypes
         entry: uv run --extra=dev -m pyright --ignoreexternal --verifytypes openapi_mock

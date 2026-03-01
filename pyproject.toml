@@ -28,6 +28,8 @@ dependencies = [
     "uvicorn>=0.30",
 ]
 optional-dependencies.dev = [
+    "check-manifest==0.51",
+    "deptry==0.24.0",
     "furo==2025.12.19",
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
@@ -93,6 +95,10 @@ typeCheckingMode = "strict"
 
 [tool.check-manifest]
 ignore = [
+    "*.pyc",
+    "__pycache__",
+    "__pycache__/**",
+    ".editorconfig",
     ".prettierrc",
     ".pre-commit-config.yaml",
     ".vscode/*.json",
@@ -101,9 +107,15 @@ ignore = [
     "CONTRIBUTING.rst",
     ".git_archival.txt",
     "uv.lock",
+    "conftest.py",
+    "docs",
+    "docs/**",
     "tests",
     "tests/**",
     "docs/build",
     "docs/build/**",
     "spelling_private_dict.txt",
 ]
+
+[tool.deptry]
+pep621_dev_dependency_groups = ["dev"]
