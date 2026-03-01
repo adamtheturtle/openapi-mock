@@ -69,8 +69,3 @@ ignore = [
     "tests",
     "tests/**",
 ]
-
-[dependency-groups]
-dev = [
-    "pyright>=1.1.408",
-]
