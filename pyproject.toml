@@ -23,6 +23,7 @@ dependencies = [
     "beartype>=0.18",
     "httpx>=0.27.0",
     "pyyaml>=6.0",
+    "responses>=0.25.3",
     "respx>=0.22.0",
     "starlette>=0.40",
     "uvicorn>=0.30",
@@ -191,6 +192,7 @@ ignore_path = [
 [tool.vulture]
 ignore_names = [
     "add_openapi_to_respx",
+    "add_openapi_to_responses",
     "main",
     "base_url",
     "request",
