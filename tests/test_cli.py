@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 
 from openapi_mock.cli import _create_routes, main, serve
 

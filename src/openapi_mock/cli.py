@@ -36,9 +36,7 @@ def _create_routes(spec: dict) -> list[Route]:
             if not isinstance(operation, dict):
                 continue
 
-            route_list.append(
-                Route(path, _make_handler(), methods=[method.upper()])
-            )
+            route_list.append(Route(path, _make_handler(), methods=[method.upper()]))
 
     return route_list
 
@@ -53,9 +51,7 @@ def serve(spec_path: str | Path, port: int = 8000, host: str = "127.0.0.1") -> N
 
 def main() -> None:
     """Entry point for the openapi-mock CLI."""
-    parser = argparse.ArgumentParser(
-        description="Serve an OpenAPI spec as a mock API"
-    )
+    parser = argparse.ArgumentParser(description="Serve an OpenAPI spec as a mock API")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     serve_parser = subparsers.add_parser("serve", help="Serve spec as mock API")
