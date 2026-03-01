@@ -24,8 +24,13 @@ Usage
    from openapi_mock import add_openapi_to_respx
    import httpx, respx
 
+   spec = {
+       "openapi": "3.0.0",
+       "paths": {"/pets": {"get": {"responses": {"200": {"description": "OK"}}}}},
+   }
    with respx.mock(base_url="https://api.example.com", assert_all_called=False) as m:
        add_openapi_to_respx(m, spec, base_url="https://api.example.com")
-       httpx.get("https://api.example.com/pets")
+       response = httpx.get("https://api.example.com/pets")
+   assert response.status_code == 200
 
 .. _respx: https://lundberg.github.io/respx/
