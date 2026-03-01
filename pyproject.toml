@@ -55,7 +55,7 @@ optional-dependencies.dev = [
     "sphinxcontrib-spelling==8.0.2",
     "sybil[pytest]==9.3.0",
     "ty==0.0.19",
-    "types-PyYAML>=6.0.12",
+    "types-pyyaml>=6.0.12",
     "vulture==2.14",
     "yamlfix==1.19.1",
 ]
