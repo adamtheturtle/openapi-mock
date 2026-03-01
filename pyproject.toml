@@ -191,6 +191,7 @@ ignore_names = [
     "add_openapi_to_respx",
     "add_openapi_to_responses",
     "base_url",
+    "load_spec",
     "request",
 ]
 exclude = [ ".venv" ]
