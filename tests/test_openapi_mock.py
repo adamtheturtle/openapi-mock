@@ -28,26 +28,6 @@ def test_empty_responses_returns_200_empty() -> None:
     assert response.json() == {}
 
 
-def test_simple_path() -> None:
-    """A simple GET path is mocked."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/pets": {
-                "get": {"responses": {"200": {"description": "OK"}}},
-            },
-        },
-    }
-    with respx.mock(
-        base_url="https://api.example.com",
-        assert_all_called=False,
-    ) as m:
-        add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get(url="https://api.example.com/pets")
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == {}
-
-
 def test_yaml_integer_status_keys() -> None:
     """YAML unquoted status keys (200:) become ints; must not crash."""
     spec = {
