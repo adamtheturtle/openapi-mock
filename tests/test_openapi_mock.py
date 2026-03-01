@@ -23,7 +23,7 @@ def test_empty_responses_returns_200_empty() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {}
 
@@ -43,7 +43,7 @@ def test_simple_path() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {}
 
@@ -73,7 +73,7 @@ def test_yaml_integer_status_keys() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"id": 1}
 
@@ -132,7 +132,7 @@ def test_uses_example_when_present() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"id": 1, "name": "Fluffy"}
 
@@ -171,7 +171,7 @@ def test_uses_examples_when_no_example() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"id": 10, "name": "Max"}
 
@@ -205,7 +205,7 @@ def test_examples_empty_falls_back_to_schema() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"id": 0}
 
@@ -244,7 +244,7 @@ def test_examples_without_value_falls_back_to_schema() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"id": 0}
 
@@ -281,7 +281,7 @@ def test_generates_from_schema_when_no_example() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"id": 0, "name": ""}
 
@@ -320,7 +320,7 @@ def test_schema_primitives() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/data")
+        response = httpx.get(url="https://api.example.com/data")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"s": "", "n": 0, "i": 0, "b": False, "x": None}
 
@@ -356,7 +356,7 @@ def test_schema_type_array_openapi_31() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/data")
+        response = httpx.get(url="https://api.example.com/data")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"name": "", "count": 0}
 
@@ -386,7 +386,7 @@ def test_array_without_items() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/items")
+        response = httpx.get(url="https://api.example.com/items")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == []
 
@@ -416,7 +416,7 @@ def test_prefers_201_response() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.post("https://api.example.com/pets", json={})
+        response = httpx.post(url="https://api.example.com/pets", json={})
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {"id": 42}
 
@@ -441,7 +441,7 @@ def test_prefers_first_2xx_when_no_200_or_201() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.NO_CONTENT
     assert response.json() == {}
 
@@ -469,7 +469,7 @@ def test_content_without_schema_or_example() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {}
 
@@ -499,7 +499,7 @@ def test_unknown_schema_type_returns_empty_object() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/data")
+        response = httpx.get(url="https://api.example.com/data")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {}
 
@@ -529,7 +529,7 @@ def test_schema_non_dict_returns_empty() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {}
 
@@ -565,7 +565,7 @@ def test_object_skips_non_dict_property_schema() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/data")
+        response = httpx.get(url="https://api.example.com/data")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"valid": ""}
 
@@ -589,7 +589,7 @@ def test_response_not_dict_returns_empty() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {}
 
@@ -620,7 +620,7 @@ def test_non_standard_status_code_returns_int() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == 522
     assert response.json() == {"error": "Timeout"}
 
@@ -651,7 +651,7 @@ def test_default_response_key_when_no_2xx() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"error": "Something went wrong"}
 
@@ -681,7 +681,7 @@ def test_first_response_when_no_2xx() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {"error": "Not found"}
 
@@ -709,7 +709,7 @@ def test_json_content_not_dict_returns_empty() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/pets")
+        response = httpx.get(url="https://api.example.com/pets")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {}
 
@@ -752,6 +752,6 @@ def test_nested_schema_generation() -> None:
         assert_all_called=False,
     ) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
-        response = httpx.get("https://api.example.com/users")
+        response = httpx.get(url="https://api.example.com/users")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"users": [{"name": ""}]}

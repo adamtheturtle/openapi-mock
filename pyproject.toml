@@ -122,8 +122,6 @@ files = [ "." ]
 exclude = [ "build", ".venv" ]
 plugins = [ "mypy_strict_kwargs" ]
 follow_untyped_imports = true
-# mypy-strict-kwargs requires keyword-only args; fix in follow-up
-disable_error_code = [ "misc" ]
 
 [tool.pyrefly]
 errors.non-exhaustive-match = "error"
