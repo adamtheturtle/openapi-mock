@@ -1,5 +1,7 @@
 """Tests for add_openapi_to_responses."""
 
+from http import HTTPStatus
+
 import requests
 import responses
 
@@ -27,7 +29,7 @@ def test_add_openapi_to_responses_simple() -> None:
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
     resp = requests.get("https://api.example.com/pets")
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
 
@@ -54,7 +56,7 @@ def test_add_openapi_to_responses_path_param() -> None:
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
     resp = requests.get("https://api.example.com/pets/42")
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 1, "name": "Fluffy"}
 
 
@@ -79,7 +81,7 @@ def test_add_openapi_to_responses_path_with_dots() -> None:
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
     resp = requests.get("https://api.example.com/api/v1.0/pets")
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"version": "1.0"}
 
 
@@ -104,7 +106,7 @@ def test_add_openapi_to_responses_query_params() -> None:
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
     resp = requests.get("https://api.example.com/pets", params={"limit": 10})
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
 
 
 @responses.activate
@@ -127,4 +129,4 @@ def test_add_openapi_to_responses_skips_invalid() -> None:
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
     resp = requests.get("https://api.example.com/valid")
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
