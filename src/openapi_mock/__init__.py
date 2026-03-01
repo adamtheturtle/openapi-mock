@@ -1,6 +1,7 @@
 """Package for serving an OpenAPI spec as a mock with respx."""
 
 import json
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any, cast
 
@@ -39,7 +40,7 @@ def _generate_from_schema(schema: dict[str, Any]) -> Any:
     return {}
 
 
-def _get_response_body(operation: dict[str, Any]) -> tuple[int, Any]:
+def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any]:
     """
     Get (status_code, json_body) for the best response in an operation.
 
@@ -48,41 +49,50 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int, Any]:
     """
     raw_responses = operation.get("responses") or {}
     if not raw_responses:
-        return 200, {}
+        return HTTPStatus.OK, {}
 
     # Normalize keys to str (YAML may produce int keys for unquoted 200:, 201:, etc.)
     responses: dict[str, Any] = {str(k): v for k, v in raw_responses.items()}
 
     # Prefer 200, then 201, then first 2xx, then first
-    for preferred in ("200", "201"):
+    for preferred in (str(HTTPStatus.OK.value), str(HTTPStatus.CREATED.value)):
         if preferred in responses:
             status_key = preferred
             break
     else:
         for key in responses:
-            if key.isdigit() and 200 <= int(key) < 300:
+            if (
+                key.isdigit()
+                and HTTPStatus.OK.value <= int(key) < HTTPStatus.MULTIPLE_CHOICES.value
+            ):
                 status_key = key
                 break
         else:
-            status_key = next(iter(responses), "200")
+            status_key = next(iter(responses), str(HTTPStatus.OK.value))
+
+    default_status: int | HTTPStatus = HTTPStatus.OK
+    if status_key.isdigit():
+        code = int(status_key)
+        try:
+            default_status = HTTPStatus(code)
+        except ValueError:
+            default_status = code
 
     response = responses.get(status_key, {})
     if not isinstance(response, dict):
-        return int(status_key) if status_key.isdigit() else 200, {}
+        return default_status, {}
 
     content = response.get("content", {}) or {}
     json_content = content.get("application/json") or {}
     if not isinstance(json_content, dict):
-        return int(status_key) if status_key.isdigit() else 200, {}
+        return default_status, {}
 
     if "example" in json_content:
-        return int(status_key) if status_key.isdigit() else 200, json_content["example"]
-    if "schema" in json_content:
-        return (
-            int(status_key) if status_key.isdigit() else 200,
-            _generate_from_schema(json_content["schema"]),
-        )
-    return int(status_key) if status_key.isdigit() else 200, {}
+        return default_status, json_content["example"]
+    schema = json_content.get("schema")
+    if isinstance(schema, dict):
+        return default_status, _generate_from_schema(schema)
+    return default_status, {}
 
 
 @beartype

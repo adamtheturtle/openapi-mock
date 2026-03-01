@@ -17,9 +17,12 @@ Usage
 
 .. code-block:: python
 
-   from openapi_mock import add_openapi_to_respx
+   from http import HTTPStatus
+
    import httpx
    import respx
+
+   from openapi_mock import add_openapi_to_respx
 
    spec = {
        "openapi": "3.0.0",
@@ -32,7 +35,7 @@ Usage
            base_url="https://api.example.com",
        )
        response = httpx.get("https://api.example.com/pets")
-   assert response.status_code == 200
+   assert response.status_code == HTTPStatus.OK
    assert response.json() == {}
 
 Reference
