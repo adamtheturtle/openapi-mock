@@ -44,7 +44,7 @@ source = ["src/openapi_mock"]
 fail_under = 100
 
 [tool.mypy]
-exclude = ["build"]
+exclude = ["build", ".venv"]
 
 [tool.pyright]
 exclude = ["build", ".venv"]
