@@ -12,6 +12,10 @@ permissions: {}
 
 jobs:
   lint:
+    strategy:
+      matrix:
+        hook-stage: [pre-commit, pre-push, manual]
+
     runs-on: ubuntu-latest
 
     steps:
@@ -26,8 +30,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: '**/pyproject.toml'
 
-      - name: Run pre-commit
-        run: uv run --extra=dev pre-commit run --all-files
+      - name: Lint
+        shell: bash
+        run: uv run --extra=dev prek run --all-files --hook-stage ${{ matrix.hook-stage }} --verbose
 
       - uses: pre-commit-ci/lite-action@v1.1.0
         if: always()
