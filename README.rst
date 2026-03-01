@@ -1,7 +1,14 @@
 openapi-mock
 ============
 
+|Build Status| |PyPI|
+
 Serve an OpenAPI spec as a mock with `respx`_.
+
+.. |Build Status| image:: https://github.com/adamtheturtle/openapi-mock/actions/workflows/ci.yml/badge.svg?branch=main
+   :target: https://github.com/adamtheturtle/openapi-mock/actions/workflows/ci.yml
+.. |PyPI| image:: https://badge.fury.io/py/openapi-mock.svg
+   :target: https://badge.fury.io/py/openapi-mock
 
 Installation
 ------------
