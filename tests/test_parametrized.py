@@ -1,11 +1,10 @@
 """Parametrized tests that run with both respx and responses backends."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from typing import Any
 
 import httpx
+from beartype import beartype
 import pytest
 import requests
 import respx
@@ -16,7 +15,9 @@ from openapi_mock import add_openapi_to_respx, add_openapi_to_responses
 BASE_URL = "https://api.example.com"
 
 
+@beartype
 def _run_respx(
+    *,
     spec: dict[str, Any],
     url: str,
     method: str = "GET",
@@ -32,7 +33,9 @@ def _run_respx(
     return resp.status_code, resp.json()
 
 
+@beartype
 def _run_responses(
+    *,
     spec: dict[str, Any],
     url: str,
     method: str = "GET",
@@ -48,7 +51,9 @@ def _run_responses(
     return resp.status_code, resp.json()
 
 
+@beartype
 def _run(
+    *,
     backend: str,
     spec: dict[str, Any],
     url: str,

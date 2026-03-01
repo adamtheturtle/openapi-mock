@@ -1,11 +1,11 @@
 """CLI for serving an OpenAPI spec as a mock API."""
 
-from __future__ import annotations
-
 import argparse
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from beartype import beartype
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
@@ -14,6 +14,7 @@ from uvicorn import run as uvicorn_run
 from openapi_mock import load_spec
 
 
+@beartype
 def _make_handler() -> Callable[..., Any]:
     """Create an async handler that returns empty JSON."""
 
@@ -24,7 +25,8 @@ def _make_handler() -> Callable[..., Any]:
     return handler
 
 
-def _create_routes(spec: dict[str, Any]) -> list[Route]:
+@beartype
+def _create_routes(*, spec: dict[str, Any]) -> list[Route]:
     """Create Starlette routes from OpenAPI spec paths."""
     paths: dict[str, Any] = spec.get("paths", {}) or {}
     route_list: list[Route] = []

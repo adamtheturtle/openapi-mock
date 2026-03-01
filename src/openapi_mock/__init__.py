@@ -13,7 +13,8 @@ import yaml
 from beartype import beartype
 
 
-def _generate_from_schema(schema: dict[str, Any]) -> Any:
+@beartype
+def _generate_from_schema(*, schema: dict[str, Any]) -> Any:
     """
     Generate mock JSON from a JSON Schema (OpenAPI 3.0/3.1 schema subset).
 
@@ -46,7 +47,8 @@ def _generate_from_schema(schema: dict[str, Any]) -> Any:
     return {}
 
 
-def _get_example_from_content(json_content: dict[str, Any]) -> Any | None:
+@beartype
+def _get_example_from_content(*, json_content: dict[str, Any]) -> Any | None:
     """Get example value from OpenAPI 3.0 example or 3.1 examples. Returns None if not found."""
     if "example" in json_content:
         return json_content["example"]
@@ -59,7 +61,8 @@ def _get_example_from_content(json_content: dict[str, Any]) -> Any | None:
     return None
 
 
-def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any]:
+@beartype
+def _get_response_body(*, operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any]:
     """
     Get (status_code, json_body) for the best response in an operation.
 
@@ -180,7 +183,8 @@ def add_openapi_to_respx(
                 )
 
 
-def _path_to_pattern(path: str) -> str:
+@beartype
+def _path_to_pattern(*, path: str) -> str:
     """Convert OpenAPI path to path pattern (e.g. /pets/{id} -> /pets/[^/]+)."""
     path_part = path if path.startswith("/") else f"/{path}"
     segments = path_part.split(sep="/")
