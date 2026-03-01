@@ -187,6 +187,7 @@ repos:
         additional_dependencies: [uv==0.9.5]
         stages: [pre-push]
 
+      # We do not use --example-workers 0 due to https://github.com/python/mypy/issues/18283
       - id: mypy-docs
         name: mypy-docs
         entry: uv run --extra=dev doccmd --no-write-to-file --language=python --command="mypy"
