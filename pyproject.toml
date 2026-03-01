@@ -52,3 +52,17 @@ exclude = ["build", ".venv"]
 
 [tool.pyright]
 exclude = ["build", ".venv"]
+
+[tool.check-manifest]
+ignore = [
+    ".prettierrc",
+    ".pre-commit-config.yaml",
+    ".vscode/*.json",
+    "CHANGELOG.rst",
+    "CODE_OF_CONDUCT.rst",
+    "CONTRIBUTING.rst",
+    ".git_archival.txt",
+    "uv.lock",
+    "tests",
+    "tests/**",
+]
