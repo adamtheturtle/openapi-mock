@@ -39,6 +39,7 @@ optional-dependencies.dev = [
     "pyproject-fmt==2.16.2",
     "pyright==1.1.408",
     "pyroma==5.0.1",
+    "responses>=0.25.3",
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
     "ruff==0.15.4",
@@ -52,6 +53,7 @@ optional-dependencies.dev = [
     "vulture==2.14",
     "yamlfix==1.19.1",
 ]
+optional-dependencies.responses = [ "responses>=0.25.3" ]
 urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
 scripts.openapi-mock = "openapi_mock.cli:main"
 

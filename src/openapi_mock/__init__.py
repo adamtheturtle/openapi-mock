@@ -1,6 +1,7 @@
-"""Package for serving an OpenAPI spec as a mock with respx."""
+"""Package for serving an OpenAPI spec as a mock with respx or responses."""
 
 import json
+import re
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any, cast
@@ -165,3 +166,51 @@ def add_openapi_to_respx(
                 method=method.upper(),
                 path=path,
             ).mock(return_value=httpx.Response(status_code, json=json_body))
+
+
+def _path_to_url_pattern(base_url: str, path: str) -> str:
+    """Convert OpenAPI path to full URL regex pattern for path param matching."""
+    base = base_url.rstrip("/")
+    path_part = path if path.startswith("/") else f"/{path}"
+    # Replace {param} with [^/]+ to match any path segment
+    pattern = re.sub(r"\{[^}]+}", "[^/]+", path_part)
+    return f"{re.escape(base)}{pattern}"
+
+
+@beartype
+def add_openapi_to_responses(
+    *,
+    spec: dict[str, Any],
+    base_url: str,
+) -> None:
+    """
+    Add mock routes from an OpenAPI spec to the responses library.
+
+    Use with ``@responses.activate`` or the ``responses`` pytest fixture.
+    Requires ``pip install openapi-mock[responses]``.
+
+    :param spec: OpenAPI 3.0 or 3.1 spec as a dict (from JSON or YAML).
+    :param base_url: Base URL for all routes (e.g. ``https://api.example.com``).
+    """
+    import responses as responses_mod
+
+    paths: dict[str, Any] = spec.get("paths", {}) or {}
+
+    for path, path_item in paths.items():
+        if not isinstance(path_item, dict):
+            continue
+        for method, operation in cast(dict[str, Any], path_item).items():
+            if method.lower() not in ("get", "post", "put", "delete", "patch"):
+                continue
+            if not isinstance(operation, dict):
+                continue
+
+            status_code, json_body = _get_response_body(operation)
+            code = int(status_code) if isinstance(status_code, HTTPStatus) else status_code
+            url_pattern = _path_to_url_pattern(base_url, path)
+            responses_mod.add(
+                method=method.upper(),
+                url=re.compile(f"^{url_pattern}$"),
+                json=json_body,
+                status=code,
+            )
