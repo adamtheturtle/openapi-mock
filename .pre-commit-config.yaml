@@ -1,6 +1,11 @@
 ---
 ci:
   skip:
+    - doc8
+    - interrogate
+    - pydocstringformatter
+    - vulture
+    - yamlfix
     - pyright-verifytypes
     - pyright-docs
     - check-manifest
