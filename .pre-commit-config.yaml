@@ -2,7 +2,6 @@
 ci:
   skip:
     - actionlint
-    - actionlint-docs
     - shellcheck
     - shellcheck-docs
     - shfmt
@@ -70,7 +69,7 @@ repos:
 
       - id: shfmt
         name: shfmt
-        entry: shfmt --write --space-redirects --indent=4
+        entry: uv run --extra=dev shfmt --write --space-redirects --indent=4
         language: python
         types_or: [shell]
         additional_dependencies: [uv==0.9.5]
