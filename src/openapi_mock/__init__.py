@@ -175,8 +175,7 @@ def _path_to_url_pattern(base_url: str, path: str) -> str:
     # Escape literal segments; replace {param} with [^/]+ to match any path segment
     segments = path_part.split("/")
     pattern_parts = [
-        "[^/]+" if re.match(r"^\{[^}]*\}$", seg) else re.escape(seg)
-        for seg in segments
+        "[^/]+" if re.match(r"^\{[^}]*\}$", seg) else re.escape(seg) for seg in segments
     ]
     pattern = "/".join(pattern_parts)
     return f"{re.escape(base)}{pattern}"
