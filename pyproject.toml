@@ -52,6 +52,7 @@ optional-dependencies.dev = [
     "vulture==2.14",
     "yamlfix==1.19.1",
 ]
+optional-dependencies.release = [ "check-wheel-contents==0.6.3" ]
 urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
 scripts.openapi-mock = "openapi_mock.cli:main"
 
@@ -94,7 +95,7 @@ ignore = [
 ]
 
 [tool.deptry]
-pep621_dev_dependency_groups = [ "dev" ]
+pep621_dev_dependency_groups = [ "dev", "release" ]
 
 [tool.pyproject-fmt]
 indent = 4
