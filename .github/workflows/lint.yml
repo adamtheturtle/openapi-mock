@@ -8,8 +8,7 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
-permissions:
-  contents: read  # required for checkout
+permissions: {}
 
 jobs:
   lint:
@@ -25,7 +24,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-          cache-dependency-glob: "**/pyproject.toml"
+          cache-dependency-glob: '**/pyproject.toml'
 
       - name: Run pre-commit
         run: uv run --extra=dev pre-commit run --all-files
@@ -39,7 +38,7 @@ jobs:
     if: always()
     steps:
       - name: Check lint job status
-        run: |
+        run: |-
           if [ "${{ needs.lint.result }}" != "success" ]; then
             echo "Lint job failed"
             exit 1

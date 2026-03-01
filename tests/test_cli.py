@@ -9,7 +9,7 @@ from openapi_mock.cli import _create_routes, main, serve
 
 
 def test_main_serve_calls_serve(tmp_path: Path) -> None:
-    """main serve parses args and calls serve."""
+    """Main serve parses args and calls serve."""
     spec_path = tmp_path / "spec.json"
     spec_path.write_text('{"openapi": "3.0.0", "paths": {}}')
 
@@ -24,7 +24,7 @@ def test_main_serve_calls_serve(tmp_path: Path) -> None:
 
 
 def test_main_serve_with_port_and_host(tmp_path: Path) -> None:
-    """main serve passes --port and --host to serve."""
+    """Main serve passes --port and --host to serve."""
     spec_path = tmp_path / "spec.json"
     spec_path.write_text('{"openapi": "3.0.0", "paths": {}}')
 

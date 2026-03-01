@@ -1,24 +1,24 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools", "setuptools-scm>=8.1.0"]
+requires = [ "setuptools", "setuptools-scm>=8.1.0" ]
 
 [project]
 name = "openapi-mock"
 description = "Serve an OpenAPI spec as a mock with respx."
 readme = { file = "README.rst", content-type = "text/x-rst" }
+keywords = [ "httpx", "mock", "openapi", "respx" ]
 license = "MIT"
-license-files = ["LICENSE"]
+license-files = [ "LICENSE" ]
+authors = [ { name = "Adam Dangoor", email = "adamdangoor@gmail.com" } ]
 requires-python = ">=3.12"
-dynamic = ["version"]
-authors = [{ name = "Adam Dangoor", email = "adamdangoor@gmail.com" }]
-keywords = ["openapi", "mock", "respx", "httpx"]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
-urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
+dynamic = [ "version" ]
 dependencies = [
     "beartype>=0.18",
     "httpx>=0.27.0",
@@ -30,68 +30,44 @@ dependencies = [
 optional-dependencies.dev = [
     "check-manifest==0.51",
     "deptry==0.24.0",
+    "doc8==2.0.0",
+    "doccmd==2026.1.27.2",
     "furo==2025.12.19",
+    "interrogate==1.7.0",
+    "pre-commit==4.5.1",
+    "pydocstringformatter==0.7.5",
+    "pyproject-fmt==2.16.1",
+    "pyright==1.1.408",
+    "pyroma==5.0.1",
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
     "ruff==0.15.4",
-    "pyright==1.1.408",
-    "pyroma==5.0.1",
-    "sybil[pytest]==9.3.0",
-    "pre-commit==4.5.1",
     "sphinx==9.1.0",
     "sphinx-copybutton==0.5.2",
     "sphinx-lint==1.0.2",
     "sphinx-pyproject==0.3.0",
     "sphinx-substitution-extensions==2026.1.12",
     "sphinxcontrib-spelling==8.0.2",
-    "doccmd==2026.1.27.2",
+    "sybil[pytest]==9.3.0",
+    "vulture==2.14",
+    "yamlfix==1.19.1",
 ]
+urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
+scripts.openapi-mock = "openapi_mock.cli:main"
 
 [tool.setuptools]
 zip-safe = false
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[project.scripts]
-openapi-mock = "openapi_mock.cli:main"
+packages.find.where = [ "src" ]
 
 [tool.setuptools_scm]
 fallback_version = "0.0.0"
 
-[tool.pytest.ini_options]
-xfail_strict = true
-log_cli = true
-
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-lint.extend-select = ["C901", "ERA001"]
-lint.unfixable = ["ERA001"]
+lint.extend-select = [ "C901", "ERA001" ]
+lint.unfixable = [ "ERA001" ]
 lint.mccabe.max-complexity = 12
-
-[tool.pyproject-fmt]
-indent = 4
-keep_full_version = true
-max_supported_python = "3.14"
-
-[tool.coverage.run]
-source = ["src/openapi_mock"]
-branch = true
-
-[tool.coverage.report]
-fail_under = 100
-exclude_also = ["if TYPE_CHECKING:"]
-show_missing = true
-
-[tool.mypy]
-exclude = ["build", ".venv"]
-
-[tool.pyright]
-exclude = ["build", ".venv"]
-enableTypeIgnoreComments = false
-reportUnnecessaryTypeIgnoreComment = true
-typeCheckingMode = "strict"
 
 [tool.check-manifest]
 ignore = [
@@ -118,4 +94,61 @@ ignore = [
 ]
 
 [tool.deptry]
-pep621_dev_dependency_groups = ["dev"]
+pep621_dev_dependency_groups = [ "dev" ]
+
+[tool.pyproject-fmt]
+indent = 4
+keep_full_version = true
+max_supported_python = "3.14"
+
+[tool.pytest]
+ini_options.xfail_strict = true
+ini_options.log_cli = true
+
+[tool.coverage]
+run.branch = true
+run.source = [ "src/openapi_mock" ]
+report.exclude_also = [ "if TYPE_CHECKING:" ]
+report.fail_under = 100
+report.show_missing = true
+
+[tool.mypy]
+exclude = [ "build", ".venv" ]
+
+[tool.pyright]
+exclude = [ "build", ".venv" ]
+enableTypeIgnoreComments = false
+reportUnnecessaryTypeIgnoreComment = true
+typeCheckingMode = "strict"
+
+[tool.pydocstringformatter]
+write = true
+split-summary-body = false
+max-line-length = 88
+
+[tool.interrogate]
+fail-under = 100
+omit-covered-files = true
+verbose = 2
+
+[tool.doc8]
+max_line_length = 2000
+ignore_path = [
+    "./.eggs",
+    "./docs/build",
+    "./node_modules",
+    "./src/*.egg-info/",
+]
+
+[tool.vulture]
+ignore_names = [
+    "add_openapi_to_respx",
+    "main",
+    "base_url",
+    "request",
+]
+exclude = [ ".venv" ]
+
+[tool.yamlfix]
+section_whitelines = 1
+whitelines = 1
