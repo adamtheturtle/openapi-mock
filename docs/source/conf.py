@@ -20,7 +20,7 @@ author = _pyproject_config.author
 # Validate version - reject 0.x (indicates missing git tags)
 _version_string = importlib.metadata.version(distribution_name=project)
 _version = Version(version=_version_string)
-if _version.major == 0:
+if _version.release[0] == 0:
     msg = (
         f"The version is {_version_string}. "
         "This indicates that the version is not set correctly. "
