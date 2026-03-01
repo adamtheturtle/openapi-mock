@@ -25,8 +25,6 @@ dependencies = [
     "pyyaml>=6.0",
     "responses>=0.25.3",
     "respx>=0.22.0",
-    "starlette>=0.40",
-    "uvicorn>=0.30",
 ]
 optional-dependencies.dev = [
     "actionlint-py==1.7.11.24",
@@ -65,8 +63,6 @@ optional-dependencies.dev = [
 ]
 optional-dependencies.release = [ "check-wheel-contents==0.6.3" ]
 urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
-scripts.openapi-mock = "openapi_mock.cli:main"
-
 [tool.setuptools]
 zip-safe = false
 package-data.openapi_mock = [ "py.typed" ]
@@ -193,7 +189,6 @@ ignore_path = [
 ignore_names = [
     "add_openapi_to_respx",
     "add_openapi_to_responses",
-    "main",
     "base_url",
     "request",
 ]
