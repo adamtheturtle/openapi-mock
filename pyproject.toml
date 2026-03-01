@@ -28,6 +28,7 @@ dependencies = [
     "uvicorn>=0.30",
 ]
 optional-dependencies.dev = [
+    "actionlint-py==1.7.11.24",
     "check-manifest==0.51",
     "deptry==0.24.0",
     "doc8==2.0.0",
@@ -42,6 +43,8 @@ optional-dependencies.dev = [
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
     "ruff==0.15.4",
+    "shellcheck-py==0.11.0.1",
+    "shfmt-py==3.12.0.2",
     "sphinx==9.1.0",
     "sphinx-copybutton==0.5.2",
     "sphinx-lint==1.0.2",
