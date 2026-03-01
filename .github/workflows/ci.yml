@@ -9,7 +9,8 @@ on:
   schedule:
     - cron: 0 1 * * *
 
-permissions: {}
+permissions:
+  contents: read  # required for checkout
 
 jobs:
   build:
