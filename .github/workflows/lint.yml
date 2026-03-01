@@ -14,6 +14,11 @@ permissions: {}
 
 jobs:
   lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        hook-stage: [pre-commit, pre-push, manual]
+
     runs-on: ubuntu-latest
 
     steps:
@@ -28,14 +33,26 @@ jobs:
           enable-cache: true
           cache-dependency-glob: '**/pyproject.toml'
 
-      - name: Run pre-commit
-        run: uv run --extra=dev pre-commit run --all-files
+      - name: Lint
+        shell: bash
+        run: uv run --extra=dev prek run --all-files --hook-stage ${{ matrix.hook-stage }}
+          --verbose
 
+  pre-commit-ci-lite:
+    needs: lint
+    runs-on: ubuntu-latest
+    if: always() && (needs.lint.result == 'success' || needs.lint.result == 'failure')
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
       - uses: pre-commit-ci/lite-action@v1.1.0
         if: always()
 
   completion-lint:
-    needs: lint
+    needs: [lint, pre-commit-ci-lite]
     runs-on: ubuntu-latest
     if: always()
     steps:

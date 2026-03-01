@@ -34,7 +34,7 @@ Usage
            spec=spec,
            base_url="https://api.example.com",
        )
-       response = httpx.get("https://api.example.com/pets")
+       response = httpx.get(url="https://api.example.com/pets")
    assert response.status_code == HTTPStatus.OK
    assert response.json() == {}
 
