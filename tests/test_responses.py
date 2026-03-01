@@ -28,14 +28,14 @@ def test_add_openapi_to_responses_simple() -> None:
         },
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
-    resp = requests.get("https://api.example.com/pets")
+    resp = requests.get(url="https://api.example.com/pets", timeout=10)
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
 
 @responses.activate
 def test_add_openapi_to_responses_path_param() -> None:
-    """Add_openapi_to_responses matches path params with regex."""
+    """Add_openapi_to_responses matches path ``params`` with regex."""
     spec = {
         "openapi": "3.0.0",
         "paths": {
@@ -55,7 +55,7 @@ def test_add_openapi_to_responses_path_param() -> None:
         },
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
-    resp = requests.get("https://api.example.com/pets/42")
+    resp = requests.get(url="https://api.example.com/pets/42", timeout=10)
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 1, "name": "Fluffy"}
 
@@ -80,7 +80,7 @@ def test_add_openapi_to_responses_path_with_dots() -> None:
         },
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
-    resp = requests.get("https://api.example.com/api/v1.0/pets")
+    resp = requests.get(url="https://api.example.com/api/v1.0/pets", timeout=10)
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"version": "1.0"}
 
@@ -105,7 +105,9 @@ def test_add_openapi_to_responses_query_params() -> None:
         },
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
-    resp = requests.get("https://api.example.com/pets", params={"limit": 10})
+    resp = requests.get(
+        url="https://api.example.com/pets", params={"limit": 10}, timeout=10
+    )
     assert resp.status_code == HTTPStatus.OK
 
 
@@ -128,5 +130,5 @@ def test_add_openapi_to_responses_skips_invalid() -> None:
         },
     }
     add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
-    resp = requests.get("https://api.example.com/valid")
+    resp = requests.get(url="https://api.example.com/valid", timeout=10)
     assert resp.status_code == HTTPStatus.OK
