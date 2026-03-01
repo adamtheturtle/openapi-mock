@@ -45,6 +45,7 @@ Reference
    :maxdepth: 3
 
    api-reference
+   openapi-parser-evaluation
    release-process
    changelog
    contributing
