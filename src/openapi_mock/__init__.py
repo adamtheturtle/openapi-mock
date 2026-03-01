@@ -71,15 +71,15 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
         return HTTPStatus.OK, {}
 
     # Normalize keys to str (YAML may produce int keys for unquoted 200:, 201:, etc.)
-    responses: dict[str, Any] = {f"{k}": v for k, v in raw_responses.items()}
+    status_responses: dict[str, Any] = {f"{k}": v for k, v in raw_responses.items()}
 
     # Prefer 200, then 201, then first 2xx, then first
     for preferred in (f"{HTTPStatus.OK.value}", f"{HTTPStatus.CREATED.value}"):
-        if preferred in responses:
+        if preferred in status_responses:
             status_key = preferred
             break
     else:
-        for key in responses:
+        for key in status_responses:
             if (
                 key.isdigit()
                 and HTTPStatus.OK.value <= int(key) < HTTPStatus.MULTIPLE_CHOICES.value
@@ -87,7 +87,7 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
                 status_key = key
                 break
         else:
-            status_key = next(iter(responses), f"{HTTPStatus.OK.value}")
+            status_key = next(iter(status_responses), f"{HTTPStatus.OK.value}")
 
     default_status: int | HTTPStatus = HTTPStatus.OK
     if status_key.isdigit():
@@ -97,7 +97,7 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
         except ValueError:
             default_status = code
 
-    response = responses.get(status_key, {})
+    response = status_responses.get(status_key, {})
     if not isinstance(response, dict):
         return default_status, {}
 
