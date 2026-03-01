@@ -35,6 +35,8 @@ optional-dependencies.dev = [
     "furo==2025.12.19",
     "interrogate==1.7.0",
     "pre-commit==4.5.1",
+    "pylint[spelling]==4.0.5",
+    "pylint-per-file-ignores==3.2.0",
     "pydocstringformatter==0.7.5",
     "pyproject-fmt==2.16.2",
     "pyright==1.1.408",
@@ -148,6 +150,28 @@ ignore_names = [
     "request",
 ]
 exclude = [ ".venv" ]
+
+[tool.pylint]
+"MASTER".load-plugins = [ "pylint_per_file_ignores" ]
+"MASTER".jobs = 0
+"MESSAGES CONTROL".enable = [ "spelling" ]
+"MESSAGES CONTROL".disable = [
+    "line-too-long",
+    "unused-import",
+    "ungrouped-imports",
+    "duplicate-code",
+    "wrong-import-order",
+    "too-many-return-statements",
+    "too-many-branches",
+    "unspecified-encoding",
+    "unused-argument",
+    "import-outside-toplevel",
+    "reimported",
+]
+"MESSAGES CONTROL".per-file-ignores = [ "docs/source/conf.py:invalid-name" ]
+"SPELLING".spelling-dict = "en_US"
+"SPELLING".spelling-private-dict-file = "spelling_private_dict.txt"
+"SPELLING".spelling-store-unknown-words = "no"
 
 [tool.yamlfix]
 section_whitelines = 1

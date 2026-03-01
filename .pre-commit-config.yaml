@@ -1,6 +1,8 @@
 ---
 ci:
   skip:
+    - pylint
+    - pylint-docs
     - pyright-verifytypes
     - pyright-docs
     - check-manifest
@@ -109,6 +111,23 @@ repos:
         entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
           --command="pyright"
         language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pylint
+        name: pylint
+        entry: uv run --extra=dev -m pylint *.py src/ tests/ docs/
+        language: python
+        stages: [manual]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pylint-docs
+        name: pylint-docs
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="pylint"
+        language: python
+        stages: [manual]
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
 
