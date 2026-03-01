@@ -51,6 +51,10 @@ optional-dependencies.dev = [
     "sybil[pytest]==9.3.0",
     "vulture==2.14",
     "yamlfix==1.19.1",
+    "mypy[faster-cache]==1.19.1",
+    "mypy-strict-kwargs==2026.1.12",
+    "ty==0.0.19",
+    "pyrefly==0.54.0",
 ]
 urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
 scripts.openapi-mock = "openapi_mock.cli:main"
@@ -113,7 +117,20 @@ report.fail_under = 100
 report.show_missing = true
 
 [tool.mypy]
+strict = true
+files = [ "." ]
 exclude = [ "build", ".venv" ]
+plugins = [ "mypy_strict_kwargs" ]
+follow_untyped_imports = true
+# mypy-strict-kwargs requires keyword-only args; fix in follow-up
+disable_error_code = [ "misc" ]
+
+[tool.ty]
+analysis.respect-type-ignore-comments = false
+terminal.error-on-warning = true
+
+[tool.pyrefly]
+errors.non-exhaustive-match = "error"
 
 [tool.pyright]
 exclude = [ "build", ".venv" ]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import Any, Callable
 
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
@@ -13,7 +14,7 @@ from uvicorn import run as uvicorn_run
 from openapi_mock import load_spec
 
 
-def _make_handler() -> object:
+def _make_handler() -> Callable[..., Any]:
     """Create an async handler that returns empty JSON."""
 
     async def handler(request: object) -> JSONResponse:
@@ -23,9 +24,9 @@ def _make_handler() -> object:
     return handler
 
 
-def _create_routes(spec: dict) -> list[Route]:
+def _create_routes(spec: dict[str, Any]) -> list[Route]:
     """Create Starlette routes from OpenAPI spec paths."""
-    paths: dict = spec.get("paths", {}) or {}
+    paths: dict[str, Any] = spec.get("paths", {}) or {}
     route_list: list[Route] = []
 
     for path, path_item in paths.items():

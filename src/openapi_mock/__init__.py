@@ -69,10 +69,10 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
         return HTTPStatus.OK, {}
 
     # Normalize keys to str (YAML may produce int keys for unquoted 200:, 201:, etc.)
-    responses: dict[str, Any] = {str(k): v for k, v in raw_responses.items()}
+    responses: dict[str, Any] = {f"{k}": v for k, v in raw_responses.items()}
 
     # Prefer 200, then 201, then first 2xx, then first
-    for preferred in (str(HTTPStatus.OK.value), str(HTTPStatus.CREATED.value)):
+    for preferred in (f"{HTTPStatus.OK.value}", f"{HTTPStatus.CREATED.value}"):
         if preferred in responses:
             status_key = preferred
             break
@@ -85,7 +85,7 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
                 status_key = key
                 break
         else:
-            status_key = next(iter(responses), str(HTTPStatus.OK.value))
+            status_key = next(iter(responses), f"{HTTPStatus.OK.value}")
 
     default_status: int | HTTPStatus = HTTPStatus.OK
     if status_key.isdigit():
@@ -125,12 +125,12 @@ def load_spec(path: str | Path) -> dict[str, Any]:
     text = path.read_text()
     suffix = path.suffix.lower()
     if suffix == ".json":
-        return json.loads(text)
+        return cast(dict[str, Any], json.loads(text))
     if suffix in (".yaml", ".yml"):
-        result = yaml.safe_load(text)
+        result: Any = yaml.safe_load(text)  # type: ignore[no-untyped-call]
         if result is None:
             raise ValueError("Empty or null YAML spec")
-        return result
+        return cast(dict[str, Any], result)
     msg = f"Unsupported format: {suffix}. Use .json, .yaml, or .yml"
     raise ValueError(msg)
 

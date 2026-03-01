@@ -15,7 +15,7 @@ def test_main_serve_calls_serve(tmp_path: Path) -> None:
 
     with patch("openapi_mock.cli.serve") as mock_serve:
         old_argv = sys.argv
-        sys.argv = ["openapi-mock", "serve", str(spec_path)]
+        sys.argv = ["openapi-mock", "serve", spec_path.as_posix()]
         try:
             main()
         finally:
@@ -33,7 +33,7 @@ def test_main_serve_with_port_and_host(tmp_path: Path) -> None:
         sys.argv = [
             "openapi-mock",
             "serve",
-            str(spec_path),
+            spec_path.as_posix(),
             "--port",
             "9000",
             "--host",
@@ -65,7 +65,7 @@ def test_create_routes_from_spec() -> None:
 
 def test_create_routes_skips_non_http_methods() -> None:
     """Non-HTTP methods are skipped."""
-    spec = {"paths": {"/pets": {"parameters": []}}}
+    spec: dict[str, object] = {"paths": {"/pets": {"parameters": []}}}
     routes = _create_routes(spec)
     assert len(routes) == 0
 

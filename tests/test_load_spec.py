@@ -44,7 +44,7 @@ def test_unsupported_format_raises(tmp_path: Path) -> None:
     """Unsupported file formats raise ValueError."""
     path = tmp_path / "spec.txt"
     path.write_text("{}")
-    with pytest.raises(ValueError, match="Unsupported format"):
+    with pytest.raises(expected_exception=ValueError, match="Unsupported format"):
         load_spec(path)
 
 
@@ -52,7 +52,7 @@ def test_empty_yaml_raises(tmp_path: Path) -> None:
     """Empty YAML files raise ValueError."""
     path = tmp_path / "spec.yaml"
     path.write_text("")
-    with pytest.raises(ValueError, match="Empty or null YAML spec"):
+    with pytest.raises(expected_exception=ValueError, match="Empty or null YAML spec"):
         load_spec(path)
 
 
@@ -60,5 +60,5 @@ def test_null_yaml_raises(tmp_path: Path) -> None:
     """YAML files containing only null raise ValueError."""
     path = tmp_path / "spec.yaml"
     path.write_text("null")
-    with pytest.raises(ValueError, match="Empty or null YAML spec"):
+    with pytest.raises(expected_exception=ValueError, match="Empty or null YAML spec"):
         load_spec(path)

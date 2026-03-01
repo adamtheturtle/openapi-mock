@@ -88,7 +88,7 @@ def test_skips_non_dict_path_item() -> None:
 
 def test_skips_non_http_methods() -> None:
     """Non-HTTP methods are skipped."""
-    spec = {"paths": {"/pets": {"parameters": []}}}
+    spec: dict[str, object] = {"paths": {"/pets": {"parameters": []}}}
     with respx.mock(base_url="https://api.example.com", assert_all_called=False) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
     # No route added
