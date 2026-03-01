@@ -127,7 +127,7 @@ def load_spec(path: str | Path) -> dict[str, Any]:
     if suffix == ".json":
         return cast(dict[str, Any], json.loads(s=text))
     if suffix in (".yaml", ".yml"):
-        result: Any = yaml.safe_load(stream=text)  # type: ignore[no-untyped-call]
+        result: Any = yaml.safe_load(stream=text)
         if result is None:
             raise ValueError("Empty or null YAML spec")
         return cast(dict[str, Any], result)
