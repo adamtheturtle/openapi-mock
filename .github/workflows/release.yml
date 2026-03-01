@@ -27,7 +27,10 @@ jobs:
           cache-dependency-glob: '**/pyproject.toml'
 
       - name: Build package
-        run: uv build
+        run: uv build --out-dir dist/
+
+      - name: Check wheel contents
+        run: uv run --extra=release check-wheel-contents dist/*.whl
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
