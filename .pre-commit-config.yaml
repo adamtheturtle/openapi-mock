@@ -23,3 +23,8 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+  - repo: https://github.com/regebro/pyroma
+    rev: "5.0.1"
+    hooks:
+      - id: pyroma
+        args: ["--min=10", "."]
