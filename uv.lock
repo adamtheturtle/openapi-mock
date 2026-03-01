@@ -821,6 +821,7 @@ dependencies = [
     { name = "beartype" },
     { name = "httpx" },
     { name = "pyyaml" },
+    { name = "responses" },
     { name = "respx" },
     { name = "starlette" },
     { name = "uvicorn" },
@@ -844,7 +845,6 @@ dev = [
     { name = "pyroma" },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "responses" },
     { name = "ruff" },
     { name = "shellcheck-py" },
     { name = "shfmt-py" },
@@ -860,9 +860,6 @@ dev = [
 ]
 release = [
     { name = "check-wheel-contents" },
-]
-responses = [
-    { name = "responses" },
 ]
 
 [package.metadata]
@@ -887,8 +884,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==7.0.0" },
     { name = "pyyaml", specifier = ">=6.0" },
-    { name = "responses", marker = "extra == 'dev'", specifier = ">=0.25.3" },
-    { name = "responses", marker = "extra == 'responses'", specifier = ">=0.25.3" },
+    { name = "responses", specifier = ">=0.25.3" },
     { name = "respx", specifier = ">=0.22.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "==0.15.4" },
     { name = "shellcheck-py", marker = "extra == 'dev'", specifier = "==0.11.0.1" },
@@ -905,7 +901,7 @@ requires-dist = [
     { name = "vulture", marker = "extra == 'dev'", specifier = "==2.14" },
     { name = "yamlfix", marker = "extra == 'dev'", specifier = "==1.19.1" },
 ]
-provides-extras = ["dev", "responses", "release"]
+provides-extras = ["dev", "release"]
 
 [[package]]
 name = "packaging"

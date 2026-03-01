@@ -8,6 +8,7 @@ from typing import Any, cast
 
 import httpx
 import respx
+import responses
 import yaml
 from beartype import beartype
 
@@ -196,13 +197,10 @@ def add_openapi_to_responses(
     Add mock routes from an OpenAPI spec to the responses library.
 
     Use with ``@responses.activate`` or the ``responses`` pytest fixture.
-    Requires ``pip install openapi-mock[responses]``.
 
     :param spec: OpenAPI 3.0 or 3.1 spec as a dict (from JSON or YAML).
     :param base_url: Base URL for all routes (e.g. ``https://api.example.com``).
     """
-    import responses as responses_mod
-
     paths: dict[str, Any] = spec.get("paths", {}) or {}
 
     for path, path_item in paths.items():
@@ -219,7 +217,7 @@ def add_openapi_to_responses(
                 int(status_code) if isinstance(status_code, HTTPStatus) else status_code
             )
             url_pattern = _path_to_url_pattern(base_url=base_url, path=path)
-            responses_mod.add(
+            responses.add(
                 method=method.upper(),
                 url=re.compile(f"^{url_pattern}(?:\\?.*)?$"),
                 json=json_body,

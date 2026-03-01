@@ -1,9 +1,5 @@
 """Tests for add_openapi_to_responses."""
 
-import pytest
-
-pytest.importorskip("responses")
-
 import requests
 import responses
 

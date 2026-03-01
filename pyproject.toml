@@ -24,6 +24,7 @@ dependencies = [
     "httpx>=0.27.0",
     "pyyaml>=6.0",
     "respx>=0.22.0",
+    "responses>=0.25.3",
     "starlette>=0.40",
     "uvicorn>=0.30",
 ]
@@ -44,7 +45,6 @@ optional-dependencies.dev = [
     "pyroma==5.0.1",
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
-    "responses>=0.25.3",
     "ruff==0.15.4",
     "shellcheck-py==0.11.0.1",
     "shfmt-py==3.12.0.2",
@@ -59,7 +59,6 @@ optional-dependencies.dev = [
     "yamlfix==1.19.1",
 ]
 optional-dependencies.release = [ "check-wheel-contents==0.6.3" ]
-optional-dependencies.responses = [ "responses>=0.25.3" ]
 urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
 scripts.openapi-mock = "openapi_mock.cli:main"
 
