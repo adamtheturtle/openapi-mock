@@ -168,7 +168,12 @@ def add_openapi_to_respx(
             ).mock(return_value=httpx.Response(status_code, json=json_body))
 
 
-def _path_to_url_pattern(base_url: str, path: str) -> str:
+@beartype
+def _path_to_url_pattern(
+    *,
+    base_url: str,
+    path: str,
+) -> str:
     """Convert OpenAPI path to full URL regex pattern for path param matching."""
     base = base_url.rstrip("/")
     path_part = path if path.startswith("/") else f"/{path}"
@@ -213,7 +218,7 @@ def add_openapi_to_responses(
             code = (
                 int(status_code) if isinstance(status_code, HTTPStatus) else status_code
             )
-            url_pattern = _path_to_url_pattern(base_url, path)
+            url_pattern = _path_to_url_pattern(base_url=base_url, path=path)
             responses_mod.add(
                 method=method.upper(),
                 url=re.compile(f"^{url_pattern}(?:\\?.*)?$"),
