@@ -6,6 +6,8 @@ requires = ["setuptools", "setuptools-scm>=8.1.0"]
 name = "openapi-mock"
 description = "Serve an OpenAPI spec as a mock with respx."
 readme = { file = "README.rst", content-type = "text/x-rst" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dynamic = ["version"]
 dependencies = [
