@@ -15,6 +15,7 @@ permissions: {}
 jobs:
   lint:
     strategy:
+      fail-fast: false
       matrix:
         hook-stage: [pre-commit, pre-push, manual]
 
