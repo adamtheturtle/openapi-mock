@@ -30,6 +30,9 @@ jobs:
       - name: Run pre-commit
         run: uv run --extra=dev pre-commit run --all-files
 
+      - uses: pre-commit-ci/lite-action@v1.1.0
+        if: always()
+
   completion-lint:
     needs: lint
     runs-on: ubuntu-latest
