@@ -60,6 +60,7 @@ scripts.openapi-mock = "openapi_mock.cli:main"
 
 [tool.setuptools]
 zip-safe = false
+package-data.openapi_mock = [ "py.typed" ]
 packages.find.where = [ "src" ]
 
 [tool.setuptools_scm]
