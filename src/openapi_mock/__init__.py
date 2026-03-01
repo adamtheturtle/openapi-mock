@@ -172,8 +172,13 @@ def _path_to_url_pattern(base_url: str, path: str) -> str:
     """Convert OpenAPI path to full URL regex pattern for path param matching."""
     base = base_url.rstrip("/")
     path_part = path if path.startswith("/") else f"/{path}"
-    # Replace {param} with [^/]+ to match any path segment
-    pattern = re.sub(r"\{[^}]+}", "[^/]+", path_part)
+    # Escape literal segments; replace {param} with [^/]+ to match any path segment
+    segments = path_part.split("/")
+    pattern_parts = [
+        "[^/]+" if re.match(r"^\{[^}]*\}$", seg) else re.escape(seg)
+        for seg in segments
+    ]
+    pattern = "/".join(pattern_parts)
     return f"{re.escape(base)}{pattern}"
 
 
@@ -212,7 +217,7 @@ def add_openapi_to_responses(
             url_pattern = _path_to_url_pattern(base_url, path)
             responses_mod.add(
                 method=method.upper(),
-                url=re.compile(f"^{url_pattern}$"),
+                url=re.compile(f"^{url_pattern}(?:\\?.*)?$"),
                 json=json_body,
                 status=code,
             )

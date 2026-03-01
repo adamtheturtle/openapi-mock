@@ -63,6 +63,55 @@ def test_add_openapi_to_responses_path_param() -> None:
 
 
 @responses.activate
+def test_add_openapi_to_responses_path_with_dots() -> None:
+    """Literal path segments (e.g. v1.0) are regex-escaped and match exactly."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/api/v1.0/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {"example": {"version": "1.0"}},
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
+    resp = requests.get("https://api.example.com/api/v1.0/pets")
+    assert resp.status_code == 200
+    assert resp.json() == {"version": "1.0"}
+
+
+@responses.activate
+def test_add_openapi_to_responses_query_params() -> None:
+    """URLs with query strings (e.g. ?limit=10) are matched."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {"schema": {"type": "array"}},
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    add_openapi_to_responses(spec=spec, base_url="https://api.example.com")
+    resp = requests.get("https://api.example.com/pets", params={"limit": 10})
+    assert resp.status_code == 200
+
+
+@responses.activate
 def test_add_openapi_to_responses_skips_invalid() -> None:
     """Add_openapi_to_responses skips non-dict path items and non-HTTP methods."""
     spec = {
