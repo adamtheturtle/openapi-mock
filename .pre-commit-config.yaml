@@ -1,42 +1,75 @@
 ---
+fail_fast: true
+
 ci:
   skip:
+    - pylint
+    - pylint-docs
     - pyright-verifytypes
     - pyright-docs
     - check-manifest
     - deptry
     - pyproject-fmt
 
+default_install_hook_types: [pre-commit, pre-push]
+
 repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+        stages: [pre-commit]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
+        stages: [pre-commit]
       - id: check-case-conflict
+        stages: [pre-commit]
+      - id: check-executables-have-shebangs
+        stages: [pre-commit]
       - id: check-merge-conflict
+        stages: [pre-commit]
+      - id: check-shebang-scripts-are-executable
+        stages: [pre-commit]
+      - id: check-symlinks
+        stages: [pre-commit]
       - id: check-json
+        stages: [pre-commit]
       - id: check-toml
+        stages: [pre-commit]
+      - id: check-vcs-permalinks
+        stages: [pre-commit]
       - id: check-yaml
+        stages: [pre-commit]
       - id: end-of-file-fixer
+        stages: [pre-commit]
       - id: trailing-whitespace
+        stages: [pre-commit]
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
       - id: rst-directive-colons
+        stages: [pre-commit]
       - id: rst-inline-touching-normal
+        stages: [pre-commit]
       - id: text-unicode-replacement-char
+        stages: [pre-commit]
       - id: rst-backticks
+        stages: [pre-commit]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.4
     hooks:
       - id: ruff
         args: [--fix]
+        stages: [pre-commit]
       - id: ruff-format
+        stages: [pre-commit]
   - repo: https://github.com/regebro/pyroma
     rev: 5.0.1
     hooks:
       - id: pyroma
         args: [--min=10, .]
+        stages: [pre-commit]
   - repo: local
     hooks:
       - id: doc8
@@ -45,6 +78,7 @@ repos:
         language: python
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: interrogate
         name: interrogate
@@ -52,6 +86,7 @@ repos:
         language: python
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: pydocstringformatter
         name: pydocstringformatter
@@ -60,6 +95,7 @@ repos:
         pass_filenames: false
         types: [python]
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: vulture
         name: vulture
@@ -67,6 +103,7 @@ repos:
         language: python
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: yamlfix
         name: yamlfix
@@ -74,6 +111,7 @@ repos:
         language: python
         types: [yaml]
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: pyproject-fmt
         name: pyproject-fmt
@@ -82,6 +120,7 @@ repos:
         types_or: [toml]
         files: pyproject.toml
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: check-manifest
         name: check-manifest
@@ -89,6 +128,7 @@ repos:
         language: python
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: deptry
         name: deptry
@@ -96,6 +136,7 @@ repos:
         language: python
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: pyright-verifytypes
         name: pyright verifytypes
@@ -103,12 +144,31 @@ repos:
         language: python
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-push]
 
       - id: pyright-docs
         name: pyright-docs
         entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
           --command="pyright"
         language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-push]
+
+      - id: pylint
+        name: pylint
+        entry: uv run --extra=dev -m pylint *.py src/ tests/ docs/
+        language: python
+        stages: [manual]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pylint-docs
+        name: pylint-docs
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="pylint"
+        language: python
+        stages: [manual]
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
 
