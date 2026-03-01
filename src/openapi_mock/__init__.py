@@ -13,11 +13,15 @@ from beartype import beartype
 
 def _generate_from_schema(schema: dict[str, Any]) -> Any:
     """
-    Generate mock JSON from a JSON Schema (OpenAPI 3.x schema subset).
+    Generate mock JSON from a JSON Schema (OpenAPI 3.0/3.1 schema subset).
 
-    Handles type, properties, items. Does not resolve $ref.
+    Handles type, properties, items. Supports type as array (OpenAPI 3.1).
+    Does not resolve $ref.
     """
     schema_type = schema.get("type")
+    # OpenAPI 3.1 / JSON Schema 2020-12: type can be array, e.g. ["string", "null"]
+    if isinstance(schema_type, list) and schema_type:
+        schema_type = next((t for t in schema_type if t != "null"), schema_type[0])
     if schema_type == "object":
         result: dict[str, Any] = {}
         for prop_name, prop_schema in (schema.get("properties") or {}).items():
@@ -38,6 +42,19 @@ def _generate_from_schema(schema: dict[str, Any]) -> Any:
     if schema_type == "null":
         return None
     return {}
+
+
+def _get_example_from_content(json_content: dict[str, Any]) -> Any | None:
+    """Get example value from OpenAPI 3.0 example or 3.1 examples. Returns None if not found."""
+    if "example" in json_content:
+        return json_content["example"]
+    examples = json_content.get("examples")
+    if isinstance(examples, dict):
+        for ex in examples.values():
+            if isinstance(ex, dict) and "value" in ex:
+                return ex["value"]
+            break
+    return None
 
 
 def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any]:
@@ -87,8 +104,9 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
     if not isinstance(json_content, dict):
         return default_status, {}
 
-    if "example" in json_content:
-        return default_status, json_content["example"]
+    example = _get_example_from_content(json_content)
+    if example is not None:
+        return default_status, example
     schema = json_content.get("schema")
     if isinstance(schema, dict):
         return default_status, _generate_from_schema(schema)
@@ -128,7 +146,7 @@ def add_openapi_to_respx(
     Add mock routes from an OpenAPI spec to a respx mock/router.
 
     :param mock_obj: The respx MockRouter or Router to add routes to.
-    :param spec: OpenAPI 3.x spec as a dict (from JSON or YAML).
+    :param spec: OpenAPI 3.0 or 3.1 spec as a dict (from JSON or YAML).
     :param base_url: Base URL for all routes. Must match ``respx.mock()``.
     """
     paths: dict[str, Any] = spec.get("paths", {}) or {}
