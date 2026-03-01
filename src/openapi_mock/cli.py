@@ -17,6 +17,7 @@ def _make_handler() -> object:
     """Create an async handler that returns empty JSON."""
 
     async def handler(request: object) -> JSONResponse:
+        """Return empty JSON for any request."""
         return JSONResponse({})
 
     return handler

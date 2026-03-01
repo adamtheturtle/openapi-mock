@@ -30,9 +30,12 @@ dependencies = [
 optional-dependencies.dev = [
     "check-manifest==0.51",
     "deptry==0.24.0",
+    "doc8==2.0.0",
     "doccmd==2026.1.27.2",
     "furo==2025.12.19",
+    "interrogate==1.7.0",
     "pre-commit==4.5.1",
+    "pydocstringformatter==0.7.5",
     "pyproject-fmt==2.16.1",
     "pyright==1.1.408",
     "pyroma==5.0.1",
@@ -46,6 +49,8 @@ optional-dependencies.dev = [
     "sphinx-substitution-extensions==2026.1.12",
     "sphinxcontrib-spelling==8.0.2",
     "sybil[pytest]==9.3.0",
+    "vulture==2.14",
+    "yamlfix==1.19.1",
 ]
 urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
 scripts.openapi-mock = "openapi_mock.cli:main"
@@ -115,3 +120,35 @@ exclude = [ "build", ".venv" ]
 enableTypeIgnoreComments = false
 reportUnnecessaryTypeIgnoreComment = true
 typeCheckingMode = "strict"
+
+[tool.pydocstringformatter]
+write = true
+split-summary-body = false
+max-line-length = 88
+
+[tool.interrogate]
+fail-under = 100
+omit-covered-files = true
+verbose = 2
+
+[tool.doc8]
+max_line_length = 2000
+ignore_path = [
+    "./.eggs",
+    "./docs/build",
+    "./node_modules",
+    "./src/*.egg-info/",
+]
+
+[tool.vulture]
+ignore_names = [
+    "add_openapi_to_respx",
+    "main",
+    "base_url",
+    "request",
+]
+exclude = [ ".venv" ]
+
+[tool.yamlfix]
+section_whitelines = 1
+whitelines = 1
