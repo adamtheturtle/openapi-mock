@@ -57,6 +57,7 @@ repos:
         name: pydocstringformatter
         entry: uv run --extra=dev pydocstringformatter src/ tests/
         language: python
+        pass_filenames: false
         types: [python]
         additional_dependencies: [uv==0.9.5]
 
