@@ -36,7 +36,7 @@ Usage
        "paths": {"/pets": {"get": {"responses": {"200": {"description": "OK"}}}}},
    }
    with respx.mock(base_url="https://api.example.com", assert_all_called=False) as m:
-       add_openapi_to_respx(m, spec, base_url="https://api.example.com")
+       add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
        response = httpx.get("https://api.example.com/pets")
    assert response.status_code == 200
 

@@ -7,6 +7,7 @@ import respx
 
 
 def add_openapi_to_respx(
+    *,
     mock_obj: respx.MockRouter | respx.Router,
     spec: dict[str, Any],
     base_url: str,
