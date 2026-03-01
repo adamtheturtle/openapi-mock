@@ -20,7 +20,9 @@ def test_main_serve_calls_serve(tmp_path: Path) -> None:
             main()
         finally:
             sys.argv = old_argv
-        mock_serve.assert_called_once_with(spec_path=spec_path, port=8000, host="127.0.0.1")
+        mock_serve.assert_called_once_with(
+            spec_path=spec_path, port=8000, host="127.0.0.1"
+        )
 
 
 def test_main_serve_with_port_and_host(tmp_path: Path) -> None:
@@ -43,7 +45,9 @@ def test_main_serve_with_port_and_host(tmp_path: Path) -> None:
             main()
         finally:
             sys.argv = old_argv
-        mock_serve.assert_called_once_with(spec_path=spec_path, port=9000, host="0.0.0.0")
+        mock_serve.assert_called_once_with(
+            spec_path=spec_path, port=9000, host="0.0.0.0"
+        )
 
 
 def test_create_routes_from_spec() -> None:
