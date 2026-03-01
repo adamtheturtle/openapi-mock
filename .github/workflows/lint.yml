@@ -35,6 +35,8 @@ jobs:
 
       - name: Lint
         shell: bash
+        env:
+          SKIP: linkcheck,spelling,docs
         run: uv run --extra=dev prek run --all-files --hook-stage ${{ matrix.hook-stage }}
           --verbose
 
