@@ -46,9 +46,12 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int, Any]:
     Prefers 200, then 201, then first 2xx, then first response.
     Uses example if present, else generates from schema.
     """
-    responses = operation.get("responses") or {}
-    if not responses:
+    raw_responses = operation.get("responses") or {}
+    if not raw_responses:
         return 200, {}
+
+    # Normalize keys to str (YAML may produce int keys for unquoted 200:, 201:, etc.)
+    responses: dict[str, Any] = {str(k): v for k, v in raw_responses.items()}
 
     # Prefer 200, then 201, then first 2xx, then first
     for preferred in ("200", "201"):
