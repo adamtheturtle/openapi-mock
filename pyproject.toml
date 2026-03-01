@@ -23,8 +23,8 @@ dependencies = [
     "beartype>=0.18",
     "httpx>=0.27.0",
     "pyyaml>=6.0",
-    "respx>=0.22.0",
     "responses>=0.25.3",
+    "respx>=0.22.0",
     "starlette>=0.40",
     "uvicorn>=0.30",
 ]
@@ -191,28 +191,11 @@ ignore_path = [
 
 [tool.vulture]
 ignore_names = [
-    # Starlette handler parameter (required by signature, not used in body)
+    "add_openapi_to_respx",
+    "add_openapi_to_responses",
+    "main",
+    "base_url",
     "request",
-    # pytest configuration
-    "pytest_collect_file",
-    "pytest_collection_modifyitems",
-    # Sphinx
-    "copybutton_exclude",
-    "extensions",
-    "html_show_copyright",
-    "html_show_sourcelink",
-    "html_show_sphinx",
-    "html_theme",
-    "html_theme_options",
-    "html_title",
-    "htmlhelp_basename",
-    "intersphinx_mapping",
-    "nitpicky",
-    "nitpick_ignore",
-    "project_copyright",
-    "rst_prolog",
-    "spelling_word_list_filename",
-    "templates_path",
 ]
 exclude = [ ".venv" ]
 
