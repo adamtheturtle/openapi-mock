@@ -4,8 +4,10 @@ from typing import Any, cast
 
 import httpx
 import respx
+from beartype import beartype
 
 
+@beartype
 def add_openapi_to_respx(
     *,
     mock_obj: respx.MockRouter | respx.Router,
