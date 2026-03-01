@@ -84,6 +84,7 @@ repos:
         pass_filenames: false
         types_or: [yaml]
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: shellcheck
         name: shellcheck
@@ -91,6 +92,7 @@ repos:
         language: python
         types_or: [shell]
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: shellcheck-docs
         name: shellcheck-docs
@@ -99,6 +101,7 @@ repos:
         language: python
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: shfmt
         name: shfmt
@@ -106,6 +109,7 @@ repos:
         language: python
         types_or: [shell]
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: shfmt-docs
         name: shfmt-docs
@@ -114,6 +118,7 @@ repos:
         language: python
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
 
       - id: doc8
         name: doc8
