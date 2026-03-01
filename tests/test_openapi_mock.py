@@ -137,6 +137,118 @@ def test_uses_example_when_present() -> None:
     assert response.json() == {"id": 1, "name": "Fluffy"}
 
 
+def test_uses_examples_when_no_example() -> None:
+    """OpenAPI 3.1: examples (plural) - use first example's value."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "first": {
+                                            "summary": "First example",
+                                            "value": {"id": 10, "name": "Max"},
+                                        },
+                                        "second": {
+                                            "summary": "Second example",
+                                            "value": {"id": 20},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    with respx.mock(
+        base_url="https://api.example.com",
+        assert_all_called=False,
+    ) as m:
+        add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
+        response = httpx.get("https://api.example.com/pets")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"id": 10, "name": "Max"}
+
+
+def test_examples_empty_falls_back_to_schema() -> None:
+    """OpenAPI 3.1: empty examples dict falls back to schema."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "examples": {},
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {"id": {"type": "integer"}},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    with respx.mock(
+        base_url="https://api.example.com",
+        assert_all_called=False,
+    ) as m:
+        add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
+        response = httpx.get("https://api.example.com/pets")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"id": 0}
+
+
+def test_examples_without_value_falls_back_to_schema() -> None:
+    """OpenAPI 3.1: examples with only externalValue falls back to schema."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "external": {
+                                            "summary": "External only",
+                                            "externalValue": "https://example.com/pet.json",
+                                        },
+                                    },
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {"id": {"type": "integer"}},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    with respx.mock(
+        base_url="https://api.example.com",
+        assert_all_called=False,
+    ) as m:
+        add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
+        response = httpx.get("https://api.example.com/pets")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"id": 0}
+
+
 def test_generates_from_schema_when_no_example() -> None:
     """Mock data is generated from schema when no example is present."""
     spec = {
@@ -211,6 +323,42 @@ def test_schema_primitives() -> None:
         response = httpx.get("https://api.example.com/data")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"s": "", "n": 0, "i": 0, "b": False, "x": None}
+
+
+def test_schema_type_array_openapi_31() -> None:
+    """OpenAPI 3.1: type as array e.g. ['string', 'null'] uses first non-null."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/data": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {"type": ["string", "null"]},
+                                            "count": {"type": ["integer", "null"]},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    with respx.mock(
+        base_url="https://api.example.com",
+        assert_all_called=False,
+    ) as m:
+        add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
+        response = httpx.get("https://api.example.com/data")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"name": "", "count": 0}
 
 
 def test_array_without_items() -> None:
