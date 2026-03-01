@@ -1,6 +1,7 @@
 """Package for serving an OpenAPI spec as a mock with respx."""
 
 import json
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any, cast
 
@@ -8,6 +9,90 @@ import httpx
 import respx
 import yaml
 from beartype import beartype
+
+
+def _generate_from_schema(schema: dict[str, Any]) -> Any:
+    """
+    Generate mock JSON from a JSON Schema (OpenAPI 3.x schema subset).
+
+    Handles type, properties, items. Does not resolve $ref.
+    """
+    schema_type = schema.get("type")
+    if schema_type == "object":
+        result: dict[str, Any] = {}
+        for prop_name, prop_schema in (schema.get("properties") or {}).items():
+            if isinstance(prop_schema, dict):
+                result[prop_name] = _generate_from_schema(prop_schema)
+        return result
+    if schema_type == "array":
+        items = schema.get("items")
+        if isinstance(items, dict):
+            return [_generate_from_schema(items)]
+        return []
+    if schema_type == "string":
+        return ""
+    if schema_type in ("number", "integer"):
+        return 0
+    if schema_type == "boolean":
+        return False
+    if schema_type == "null":
+        return None
+    return {}
+
+
+def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any]:
+    """
+    Get (status_code, json_body) for the best response in an operation.
+
+    Prefers 200, then 201, then first 2xx, then first response.
+    Uses example if present, else generates from schema.
+    """
+    raw_responses = operation.get("responses") or {}
+    if not raw_responses:
+        return HTTPStatus.OK, {}
+
+    # Normalize keys to str (YAML may produce int keys for unquoted 200:, 201:, etc.)
+    responses: dict[str, Any] = {str(k): v for k, v in raw_responses.items()}
+
+    # Prefer 200, then 201, then first 2xx, then first
+    for preferred in (str(HTTPStatus.OK.value), str(HTTPStatus.CREATED.value)):
+        if preferred in responses:
+            status_key = preferred
+            break
+    else:
+        for key in responses:
+            if (
+                key.isdigit()
+                and HTTPStatus.OK.value <= int(key) < HTTPStatus.MULTIPLE_CHOICES.value
+            ):
+                status_key = key
+                break
+        else:
+            status_key = next(iter(responses), str(HTTPStatus.OK.value))
+
+    default_status: int | HTTPStatus = HTTPStatus.OK
+    if status_key.isdigit():
+        code = int(status_key)
+        try:
+            default_status = HTTPStatus(code)
+        except ValueError:
+            default_status = code
+
+    response = responses.get(status_key, {})
+    if not isinstance(response, dict):
+        return default_status, {}
+
+    content = response.get("content", {}) or {}
+    json_content = content.get("application/json") or {}
+    if not isinstance(json_content, dict):
+        return default_status, {}
+
+    if "example" in json_content:
+        return default_status, json_content["example"]
+    schema = json_content.get("schema")
+    if isinstance(schema, dict):
+        return default_status, _generate_from_schema(schema)
+    return default_status, {}
 
 
 @beartype
@@ -57,7 +142,8 @@ def add_openapi_to_respx(
             if not isinstance(operation, dict):
                 continue
 
+            status_code, json_body = _get_response_body(operation)
             mock_obj.route(
                 method=method.upper(),
                 path=path,
-            ).mock(return_value=httpx.Response(200, json={}))
+            ).mock(return_value=httpx.Response(status_code, json=json_body))

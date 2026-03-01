@@ -28,8 +28,12 @@ Usage
 
 .. code-block:: python
 
+   from http import HTTPStatus
+
+   import httpx
+   import respx
+
    from openapi_mock import add_openapi_to_respx
-   import httpx, respx
 
    spec = {
        "openapi": "3.0.0",
@@ -38,6 +42,6 @@ Usage
    with respx.mock(base_url="https://api.example.com", assert_all_called=False) as m:
        add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
        response = httpx.get("https://api.example.com/pets")
-   assert response.status_code == 200
+   assert response.status_code == HTTPStatus.OK
 
 .. _respx: https://lundberg.github.io/respx/

@@ -1,9 +1,9 @@
 """Tests for CLI serve command."""
 
 import sys
+from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
-
 
 from openapi_mock.cli import _create_routes, main, serve
 
@@ -100,7 +100,7 @@ def test_serve_returns_json_response() -> None:
 
     client = TestClient(app)
     response = client.get("/pets")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {}
 
 
