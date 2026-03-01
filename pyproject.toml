@@ -43,6 +43,12 @@ source = ["src/openapi_mock"]
 [tool.coverage.report]
 fail_under = 100
 
+[tool.mypy]
+exclude = ["build"]
+
+[tool.pyright]
+exclude = ["build", ".venv"]
+
 [tool.check-manifest]
 ignore = [
     ".prettierrc",
