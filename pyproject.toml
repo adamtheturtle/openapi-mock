@@ -42,3 +42,17 @@ source = ["src/openapi_mock"]
 
 [tool.coverage.report]
 fail_under = 100
+
+[tool.check-manifest]
+ignore = [
+    ".prettierrc",
+    ".pre-commit-config.yaml",
+    ".vscode/*.json",
+    "CHANGELOG.rst",
+    "CODE_OF_CONDUCT.rst",
+    "CONTRIBUTING.rst",
+    "LICENSE",
+    ".git_archival.txt",
+    "tests",
+    "tests/**",
+]
