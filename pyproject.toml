@@ -173,11 +173,28 @@ ignore_path = [
 
 [tool.vulture]
 ignore_names = [
-    "add_openapi_to_respx",
-    "add_openapi_to_responses",
-    "main",
-    "base_url",
+    # Starlette handler parameter (required by signature, not used in body)
     "request",
+    # pytest configuration
+    "pytest_collect_file",
+    "pytest_collection_modifyitems",
+    # Sphinx
+    "copybutton_exclude",
+    "extensions",
+    "html_show_copyright",
+    "html_show_sourcelink",
+    "html_show_sphinx",
+    "html_theme",
+    "html_theme_options",
+    "html_title",
+    "htmlhelp_basename",
+    "intersphinx_mapping",
+    "nitpicky",
+    "nitpick_ignore",
+    "project_copyright",
+    "rst_prolog",
+    "spelling_word_list_filename",
+    "templates_path",
 ]
 exclude = [ ".venv" ]
 
