@@ -28,3 +28,8 @@ xfail_strict = true
 [tool.ruff]
 target-version = "py312"
 line-length = 88
+
+[tool.pyproject-fmt]
+indent = 4
+keep_full_version = true
+max_supported_python = "3.14"
