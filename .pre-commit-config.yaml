@@ -63,6 +63,7 @@ repos:
         name: Build Documentation
         entry: uv run --extra=dev sphinx-build -M html docs/source docs/build -W
         language: python
+        types_or: [rst]
         stages: [manual]
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
