@@ -47,6 +47,12 @@ fail_under = 100
 exclude_also = ["if TYPE_CHECKING:"]
 show_missing = true
 
+[tool.mypy]
+exclude = ["build", ".venv"]
+
+[tool.pyright]
+exclude = ["build", ".venv"]
+
 [tool.check-manifest]
 ignore = [
     ".prettierrc",
