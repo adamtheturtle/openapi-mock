@@ -3,6 +3,9 @@ fail_fast: true
 
 ci:
   skip:
+    - linkcheck
+    - spelling
+    - docs
     - actionlint
     - shellcheck
     - shellcheck-docs

@@ -54,6 +54,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: '**/pyproject.toml'
       - uses: pre-commit-ci/lite-action@v1.1.0
+        if: always()
 
   completion-lint:
     needs: lint
