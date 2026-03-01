@@ -18,3 +18,4 @@ Calver
 httpx
 intersphinx
 str
+pytest

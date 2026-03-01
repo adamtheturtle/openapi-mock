@@ -71,15 +71,15 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
         return HTTPStatus.OK, {}
 
     # Normalize keys to str (YAML may produce int keys for unquoted 200:, 201:, etc.)
-    responses: dict[str, Any] = {f"{k}": v for k, v in raw_responses.items()}
+    status_responses: dict[str, Any] = {f"{k}": v for k, v in raw_responses.items()}
 
     # Prefer 200, then 201, then first 2xx, then first
     for preferred in (f"{HTTPStatus.OK.value}", f"{HTTPStatus.CREATED.value}"):
-        if preferred in responses:
+        if preferred in status_responses:
             status_key = preferred
             break
     else:
-        for key in responses:
+        for key in status_responses:
             if (
                 key.isdigit()
                 and HTTPStatus.OK.value <= int(key) < HTTPStatus.MULTIPLE_CHOICES.value
@@ -87,7 +87,7 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
                 status_key = key
                 break
         else:
-            status_key = next(iter(responses), f"{HTTPStatus.OK.value}")
+            status_key = next(iter(status_responses), f"{HTTPStatus.OK.value}")
 
     default_status: int | HTTPStatus = HTTPStatus.OK
     if status_key.isdigit():
@@ -97,7 +97,7 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
         except ValueError:
             default_status = code
 
-    response = responses.get(status_key, {})
+    response = status_responses.get(status_key, {})
     if not isinstance(response, dict):
         return default_status, {}
 
@@ -179,12 +179,15 @@ def _path_to_url_pattern(
     base = base_url.rstrip("/")
     path_part = path if path.startswith("/") else f"/{path}"
     # Escape literal segments; replace {param} with [^/]+ to match any path segment
-    segments = path_part.split("/")
+    segments = path_part.split(sep="/")
     pattern_parts = [
-        "[^/]+" if re.match(r"^\{[^}]*\}$", seg) else re.escape(seg) for seg in segments
+        "[^/]+"
+        if re.match(pattern=r"^\{[^}]*\}$", string=seg)
+        else re.escape(pattern=seg)
+        for seg in segments
     ]
     pattern = "/".join(pattern_parts)
-    return f"{re.escape(base)}{pattern}"
+    return f"{re.escape(pattern=base)}{pattern}"
 
 
 @beartype
@@ -219,7 +222,7 @@ def add_openapi_to_responses(
             url_pattern = _path_to_url_pattern(base_url=base_url, path=path)
             responses.add(
                 method=method.upper(),
-                url=re.compile(f"^{url_pattern}(?:\\?.*)?$"),
+                url=re.compile(pattern=f"^{url_pattern}(?:\\?.*)?$"),
                 json=json_body,
                 status=code,
             )

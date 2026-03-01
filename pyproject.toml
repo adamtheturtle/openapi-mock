@@ -60,6 +60,7 @@ optional-dependencies.dev = [
     "sybil[pytest]==9.3.0",
     "ty==0.0.19",
     "types-pyyaml>=6.0.12",
+    "types-requests>=2.32.0",
     "vulture==2.14",
     "yamlfix==1.19.1",
 ]
