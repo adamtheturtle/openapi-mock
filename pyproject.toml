@@ -18,13 +18,28 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock" }
+urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
 dependencies = [
     "beartype>=0.18",
     "httpx>=0.27.0",
     "respx>=0.22.0",
 ]
-optional-dependencies.dev = ["pytest>=7.0", "pytest-cov>=6.0", "ruff>=0.8", "pyright>=1.1", "pyroma>=3.2", "sybil[pytest]>=4.0", "pre-commit>=4.0"]
+optional-dependencies.dev = [
+    "furo>=2025.1",
+    "pytest>=7.0",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "pyright>=1.1",
+    "pyroma>=3.2",
+    "sybil[pytest]>=4.0",
+    "pre-commit>=4.0",
+    "sphinx>=9.0",
+    "sphinx-copybutton>=0.5",
+    "sphinx-lint>=1.0",
+    "sphinx-pyproject>=0.3",
+    "sphinx-substitution-extensions>=2026.1",
+    "sphinxcontrib-spelling>=8.0",
+]
 
 [tool.setuptools]
 zip-safe = false
@@ -81,4 +96,7 @@ ignore = [
     "uv.lock",
     "tests",
     "tests/**",
+    "docs/build",
+    "docs/build/**",
+    "spelling_private_dict.txt",
 ]
