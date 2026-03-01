@@ -423,7 +423,7 @@ wheels = [
 
 [[package]]
 name = "doccmd"
-version = "2026.2.27.1"
+version = "2026.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
@@ -436,9 +436,9 @@ dependencies = [
     { name = "sybil" },
     { name = "sybil-extras" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c6/ca/7727a932d8a320d345b69a05423d1271eddeed4731303448a50197abbc7d/doccmd-2026.2.27.1.tar.gz", hash = "sha256:d3933f012c3911bef79a16fbdbf397e0b899a265931119893c44da53aa149642", size = 191209, upload-time = "2026-02-27T12:28:55.247Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/62/3729aa84b758f979bbfb3c67d6494aae5bca9eb45adcc9f14b0a401c0118/doccmd-2026.3.1.tar.gz", hash = "sha256:ec93d9ba3f5c0197645be0799a4ca999111fdf0b791d9a7a8a8223ec5a4949ae", size = 177578, upload-time = "2026-03-01T21:37:55.684Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/61/61/5684a1673b4eb8e08a2e7acd15f012f729b32ea3eb7eeb888ea6bdf4d493/doccmd-2026.2.27.1-py2.py3-none-any.whl", hash = "sha256:4b272991db8ca63c822433647598797cc5bd4f9dfdd7edac71c97492fff8544d", size = 21367, upload-time = "2026-02-27T12:28:53.55Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/3a/39ef3391f9b022826be068e95335335737a99fbf5095e849e5dd9c413dd1/doccmd-2026.3.1-py2.py3-none-any.whl", hash = "sha256:b6b024edc3bf47c9af7e3b69971365c858e342647a220d9f1a8cdd3ad83f1494", size = 21360, upload-time = "2026-03-01T21:37:54.025Z" },
 ]
 
 [[package]]
@@ -994,7 +994,7 @@ requires-dist = [
     { name = "check-wheel-contents", marker = "extra == 'release'", specifier = "==0.6.3" },
     { name = "deptry", marker = "extra == 'dev'", specifier = "==0.24.0" },
     { name = "doc8", marker = "extra == 'dev'", specifier = "==2.0.0" },
-    { name = "doccmd", marker = "extra == 'dev'", specifier = "==2026.2.27.1" },
+    { name = "doccmd", marker = "extra == 'dev'", specifier = "==2026.3.1" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
@@ -1919,16 +1919,18 @@ pytest = [
 
 [[package]]
 name = "sybil-extras"
-version = "2026.2.27"
+version = "2026.3.1.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
+    { name = "docutils" },
     { name = "markdown-it-py" },
+    { name = "myst-parser" },
     { name = "sybil" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bf/a2/904c82b7adc14a43dc2cad8236b6a24f19dff50776e87dee167f8e74dcb7/sybil_extras-2026.2.27.tar.gz", hash = "sha256:5256d3f2abc5a02b3e51caa27415b57727478da935b1d3635ef6f630ab2ff08f", size = 82373, upload-time = "2026-02-27T07:41:51.716Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/af/e3ea947a4710016bc83482f69552c7ba962033dc25a2062af26b8c824b44/sybil_extras-2026.3.1.6.tar.gz", hash = "sha256:88a2518a273d5ae6f25bf4dcaaa8f35a7b8db0aa92403fcd8f005e51573d4a63", size = 101890, upload-time = "2026-03-01T15:55:13.013Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/7a/29010930e5625868bf9650336412f1488b15836c467b2e0c94d98d1cc1e9/sybil_extras-2026.2.27-py2.py3-none-any.whl", hash = "sha256:cc72aac98626f0ca22b44092add87d1a7ba694de6ea235d75b4aea858123e687", size = 64105, upload-time = "2026-02-27T07:41:49.639Z" },
+    { url = "https://files.pythonhosted.org/packages/32/17/c00359eba983d69b416fa31034919630ca303659b91e6cd880d27c1fe00e/sybil_extras-2026.3.1.6-py2.py3-none-any.whl", hash = "sha256:6d64cff310ad8c8232cfa1c38a0812fbaf7690c8c4a7831992c5c542ba859d23", size = 80324, upload-time = "2026-03-01T15:55:11.223Z" },
 ]
 
 [[package]]
