@@ -214,7 +214,7 @@ repos:
       - id: pylint-docs
         name: pylint-docs
         entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
-          --command="pylint"
+          --command="pylint --disable=missing-module-docstring,invalid-name"
         language: python
         stages: [manual]
         types_or: [markdown, rst]

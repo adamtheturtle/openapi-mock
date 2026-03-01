@@ -38,8 +38,22 @@ jobs:
         run: uv run --extra=dev prek run --all-files --hook-stage ${{ matrix.hook-stage }}
           --verbose
 
+  pre-commit-ci-lite:
+    needs: lint
+    runs-on: ubuntu-latest
+    if: always() && (needs.lint.result == 'success' || needs.lint.result == 'failure')
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: '**/pyproject.toml'
       - uses: pre-commit-ci/lite-action@v1.1.0
-        if: always()
 
   completion-lint:
     needs: lint
