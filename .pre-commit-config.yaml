@@ -12,6 +12,12 @@ ci:
     - pylint-docs
     - pyright-verifytypes
     - pyright-docs
+    - mypy
+    - mypy-docs
+    - ty
+    - ty-docs
+    - pyrefly
+    - pyrefly-docs
     - check-manifest
     - deptry
     - pyproject-fmt
@@ -219,6 +225,60 @@ repos:
         stages: [manual]
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
+
+      - id: mypy
+        name: mypy
+        entry: uv run --extra=dev -m mypy .
+        language: python
+        types_or: [python, toml]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-push]
+
+      # We do not use --example-workers 0 due to https://github.com/python/mypy/issues/18283
+      - id: mypy-docs
+        name: mypy-docs
+        entry: uv run --extra=dev doccmd --no-write-to-file --language=python --command="mypy"
+        language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-push]
+
+      - id: ty
+        name: ty
+        entry: uv run --extra=dev ty check
+        language: python
+        types_or: [python, toml]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-push]
+
+      - id: ty-docs
+        name: ty-docs
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="ty check"
+        language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-push]
+
+      - id: pyrefly
+        name: pyrefly
+        entry: uv run --extra=dev pyrefly check
+        language: python
+        types_or: [python, toml]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-push]
+
+      - id: pyrefly-docs
+        name: pyrefly-docs
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="pyrefly check"
+        language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-push]
 
       - id: linkcheck
         name: linkcheck

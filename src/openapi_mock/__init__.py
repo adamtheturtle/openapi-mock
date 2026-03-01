@@ -26,12 +26,12 @@ def _generate_from_schema(schema: dict[str, Any]) -> Any:
         result: dict[str, Any] = {}
         for prop_name, prop_schema in (schema.get("properties") or {}).items():
             if isinstance(prop_schema, dict):
-                result[prop_name] = _generate_from_schema(prop_schema)
+                result[prop_name] = _generate_from_schema(schema=prop_schema)
         return result
     if schema_type == "array":
         items = schema.get("items")
         if isinstance(items, dict):
-            return [_generate_from_schema(items)]
+            return [_generate_from_schema(schema=items)]
         return []
     if schema_type == "string":
         return ""
@@ -69,10 +69,10 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
         return HTTPStatus.OK, {}
 
     # Normalize keys to str (YAML may produce int keys for unquoted 200:, 201:, etc.)
-    responses: dict[str, Any] = {str(k): v for k, v in raw_responses.items()}
+    responses: dict[str, Any] = {f"{k}": v for k, v in raw_responses.items()}
 
     # Prefer 200, then 201, then first 2xx, then first
-    for preferred in (str(HTTPStatus.OK.value), str(HTTPStatus.CREATED.value)):
+    for preferred in (f"{HTTPStatus.OK.value}", f"{HTTPStatus.CREATED.value}"):
         if preferred in responses:
             status_key = preferred
             break
@@ -85,13 +85,13 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
                 status_key = key
                 break
         else:
-            status_key = next(iter(responses), str(HTTPStatus.OK.value))
+            status_key = next(iter(responses), f"{HTTPStatus.OK.value}")
 
     default_status: int | HTTPStatus = HTTPStatus.OK
     if status_key.isdigit():
         code = int(status_key)
         try:
-            default_status = HTTPStatus(code)
+            default_status = HTTPStatus(value=code)
         except ValueError:
             default_status = code
 
@@ -104,12 +104,12 @@ def _get_response_body(operation: dict[str, Any]) -> tuple[int | HTTPStatus, Any
     if not isinstance(json_content, dict):
         return default_status, {}
 
-    example = _get_example_from_content(json_content)
+    example = _get_example_from_content(json_content=json_content)
     if example is not None:
         return default_status, example
     schema = json_content.get("schema")
     if isinstance(schema, dict):
-        return default_status, _generate_from_schema(schema)
+        return default_status, _generate_from_schema(schema=schema)
     return default_status, {}
 
 
@@ -125,12 +125,12 @@ def load_spec(path: str | Path) -> dict[str, Any]:
     text = path.read_text()
     suffix = path.suffix.lower()
     if suffix == ".json":
-        return json.loads(text)
+        return cast(dict[str, Any], json.loads(s=text))
     if suffix in (".yaml", ".yml"):
-        result = yaml.safe_load(text)
+        result: Any = yaml.safe_load(stream=text)
         if result is None:
             raise ValueError("Empty or null YAML spec")
-        return result
+        return cast(dict[str, Any], result)
     msg = f"Unsupported format: {suffix}. Use .json, .yaml, or .yml"
     raise ValueError(msg)
 
@@ -160,8 +160,8 @@ def add_openapi_to_respx(
             if not isinstance(operation, dict):
                 continue
 
-            status_code, json_body = _get_response_body(operation)
+            status_code, json_body = _get_response_body(operation=operation)
             mock_obj.route(
                 method=method.upper(),
                 path=path,
-            ).mock(return_value=httpx.Response(status_code, json=json_body))
+            ).mock(return_value=httpx.Response(status_code=status_code, json=json_body))
