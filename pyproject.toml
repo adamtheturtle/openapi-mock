@@ -14,7 +14,7 @@ dependencies = [
     "httpx>=0.27.0",
     "respx>=0.22.0",
 ]
-optional-dependencies.dev = ["pytest>=7.0", "pytest-cov>=6.0"]
+optional-dependencies.dev = ["pytest>=7.0", "pytest-cov>=6.0", "ruff>=0.8"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -28,6 +28,9 @@ xfail_strict = true
 [tool.ruff]
 target-version = "py312"
 line-length = 88
+lint.extend-select = ["C901", "ERA001"]
+lint.unfixable = ["ERA001"]
+lint.mccabe.max-complexity = 12
 
 [tool.coverage.run]
 source = ["src/openapi_mock"]
