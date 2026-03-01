@@ -34,7 +34,6 @@ optional-dependencies.dev = [
     "doccmd==2026.2.27.1",
     "furo==2025.12.19",
     "interrogate==1.7.0",
-    "pre-commit==4.5.1",
     "prek==0.3.3",
     "pydocstringformatter==0.7.5",
     "pylint[spelling]==4.0.5",
