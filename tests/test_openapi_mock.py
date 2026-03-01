@@ -446,6 +446,68 @@ def test_response_not_dict_returns_empty() -> None:
     assert response.json() == {}
 
 
+def test_non_standard_status_code_returns_int() -> None:
+    """Non-standard status codes (e.g. 522) fall back to int."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "522": {
+                            "description": "Connection timed out",
+                            "content": {
+                                "application/json": {
+                                    "example": {"error": "Timeout"},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    with respx.mock(
+        base_url="https://api.example.com",
+        assert_all_called=False,
+    ) as m:
+        add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
+        response = httpx.get("https://api.example.com/pets")
+    assert response.status_code == 522
+    assert response.json() == {"error": "Timeout"}
+
+
+def test_default_response_key_when_no_2xx() -> None:
+    """Uses default response (mapped to 200) when only default exists."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "default": {
+                            "description": "Fallback",
+                            "content": {
+                                "application/json": {
+                                    "example": {"error": "Something went wrong"},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    with respx.mock(
+        base_url="https://api.example.com",
+        assert_all_called=False,
+    ) as m:
+        add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
+        response = httpx.get("https://api.example.com/pets")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"error": "Something went wrong"}
+
+
 def test_first_response_when_no_2xx() -> None:
     """Uses first response when no 2xx status exists."""
     spec = {
