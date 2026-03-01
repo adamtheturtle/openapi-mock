@@ -33,14 +33,17 @@ optional-dependencies.dev = [
     "check-manifest==0.51",
     "deptry==0.24.0",
     "doc8==2.0.0",
-    "doccmd==2026.2.27.1",
+    "doccmd==2026.3.1",
     "furo==2025.12.19",
     "interrogate==1.7.0",
-    "pre-commit==4.5.1",
+    "mypy[faster-cache]==1.19.1",
+    "mypy-strict-kwargs==2026.1.12",
+    "prek==0.3.3",
     "pydocstringformatter==0.7.5",
     "pylint[spelling]==4.0.5",
     "pylint-per-file-ignores==3.2.0",
     "pyproject-fmt==2.16.2",
+    "pyrefly==0.54.0",
     "pyright==1.1.408",
     "pyroma==5.0.1",
     "pytest==9.0.2",
@@ -55,6 +58,8 @@ optional-dependencies.dev = [
     "sphinx-substitution-extensions==2026.1.12",
     "sphinxcontrib-spelling==8.0.2",
     "sybil[pytest]==9.3.0",
+    "ty==0.0.19",
+    "types-pyyaml>=6.0.12",
     "vulture==2.14",
     "yamlfix==1.19.1",
 ]
@@ -94,7 +99,11 @@ lint.mccabe.max-complexity = 12
     "import-outside-toplevel",
     "reimported",
 ]
-"MESSAGES CONTROL".per-file-ignores = [ "docs/source/conf.py:invalid-name" ]
+"MESSAGES CONTROL".per-file-ignores = [
+    "docs/source/conf.py:invalid-name",
+    "docs/source/doccmd_*.py:missing-module-docstring,invalid-name",
+    "doccmd_README_rst_*.py:missing-module-docstring,invalid-name",
+]
 "SPELLING".spelling-dict = "en_US"
 "SPELLING".spelling-private-dict-file = "spelling_private_dict.txt"
 "SPELLING".spelling-store-unknown-words = "no"
@@ -143,13 +152,23 @@ report.fail_under = 100
 report.show_missing = true
 
 [tool.mypy]
+strict = true
+files = [ "." ]
 exclude = [ "build", ".venv" ]
+plugins = [ "mypy_strict_kwargs" ]
+
+[tool.pyrefly]
+errors.non-exhaustive-match = "error"
 
 [tool.pyright]
 exclude = [ "build", ".venv" ]
 enableTypeIgnoreComments = false
 reportUnnecessaryTypeIgnoreComment = true
 typeCheckingMode = "strict"
+
+[tool.ty]
+analysis.respect-type-ignore-comments = false
+terminal.error-on-warning = true
 
 [tool.pydocstringformatter]
 write = true
