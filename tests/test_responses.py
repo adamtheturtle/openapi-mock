@@ -12,7 +12,7 @@ from openapi_mock import add_openapi_to_responses
 
 @responses.activate
 def test_add_openapi_to_responses_simple() -> None:
-    """add_openapi_to_responses adds mocks for GET /pets."""
+    """Add_openapi_to_responses adds mocks for GET /pets."""
     spec = {
         "openapi": "3.0.0",
         "paths": {
@@ -20,7 +20,9 @@ def test_add_openapi_to_responses_simple() -> None:
                 "get": {
                     "responses": {
                         "200": {
-                            "content": {"application/json": {"schema": {"type": "object"}}},
+                            "content": {
+                                "application/json": {"schema": {"type": "object"}}
+                            },
                         },
                     },
                 },
@@ -35,7 +37,7 @@ def test_add_openapi_to_responses_simple() -> None:
 
 @responses.activate
 def test_add_openapi_to_responses_path_param() -> None:
-    """add_openapi_to_responses matches path params with regex."""
+    """Add_openapi_to_responses matches path params with regex."""
     spec = {
         "openapi": "3.0.0",
         "paths": {
@@ -62,7 +64,7 @@ def test_add_openapi_to_responses_path_param() -> None:
 
 @responses.activate
 def test_add_openapi_to_responses_skips_invalid() -> None:
-    """add_openapi_to_responses skips non-dict path items and non-HTTP methods."""
+    """Add_openapi_to_responses skips non-dict path items and non-HTTP methods."""
     spec = {
         "openapi": "3.0.0",
         "paths": {
