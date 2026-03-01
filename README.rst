@@ -3,6 +3,22 @@ openapi-mock
 
 Serve an OpenAPI spec as a mock with `respx`_.
 
+Installation
+------------
+
+.. code-block:: console
+
+   uv pip install openapi-mock
+
+Or with pip:
+
+.. code-block:: console
+
+   pip install openapi-mock
+
+Usage
+-----
+
 .. code-block:: python
 
    from openapi_mock import add_openapi_to_respx
