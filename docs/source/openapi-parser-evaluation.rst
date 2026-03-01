@@ -12,7 +12,7 @@ Current Approach
 
 openapi-mock currently:
 
-- Loads specs via :func:`load_spec` (JSON or YAML to dict)
+- Loads specs via ``load_spec`` (JSON or YAML to dict)
 - Iterates over ``paths`` and operations manually
 - Extracts response examples/schemas from operations
 
