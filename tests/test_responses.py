@@ -35,7 +35,7 @@ def test_add_openapi_to_responses_simple() -> None:
 
 @responses.activate
 def test_add_openapi_to_responses_path_param() -> None:
-    """Add_openapi_to_responses matches path params with regex."""
+    """Add_openapi_to_responses matches path ``params`` with regex."""
     spec = {
         "openapi": "3.0.0",
         "paths": {
