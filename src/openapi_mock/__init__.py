@@ -2,14 +2,12 @@
 
 import re
 from http import HTTPStatus
-from pathlib import Path
 from typing import Any, cast
 
 import httpx
 import respx
 import responses
 from beartype import beartype
-from prance import ResolvingParser  # type: ignore[import-untyped]
 
 
 @beartype
@@ -115,26 +113,6 @@ def _get_response_body(*, operation: dict[str, Any]) -> tuple[int | HTTPStatus, 
     if isinstance(schema, dict):
         return default_status, _generate_from_schema(schema=schema)
     return default_status, {}
-
-
-@beartype
-def load_spec(path: str | Path) -> dict[str, Any]:
-    """
-    Load an OpenAPI spec from a file (JSON or YAML).
-
-    Uses prance for parsing and resolving ``$ref`` references. Supports
-    OpenAPI 2.0 (Swagger), 3.0, and 3.1 specifications.
-
-    :param path: Path to the spec file (``.json`` or ``.yaml``/``.yml``).
-    :return: OpenAPI spec as a dict, with ``$ref`` references resolved.
-    """
-    path = Path(path)
-    if not path.exists():
-        raise FileNotFoundError(f"Spec file not found: {path}")
-    parser = ResolvingParser(
-        url=str(object=path.resolve()), backend="openapi-spec-validator"
-    )
-    return cast(dict[str, Any], parser.specification)
 
 
 @beartype
