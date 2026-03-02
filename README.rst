@@ -3,7 +3,7 @@ openapi-mock
 
 |Build Status| |PyPI|
 
-Serve an OpenAPI spec as a mock with `respx`_.
+Serve an OpenAPI spec as a mock with `respx`_ or `responses`_.
 
 .. |Build Status| image:: https://github.com/adamtheturtle/openapi-mock/actions/workflows/ci.yml/badge.svg?branch=main
    :target: https://github.com/adamtheturtle/openapi-mock/actions/workflows/ci.yml
@@ -26,6 +26,9 @@ Or with pip:
 Usage
 -----
 
+With respx (httpx)
+~~~~~~~~~~~~~~~~~~
+
 .. code-block:: python
 
    from http import HTTPStatus
@@ -44,4 +47,26 @@ Usage
        response = httpx.get(url="https://api.example.com/pets")
    assert response.status_code == HTTPStatus.OK
 
+With responses (requests)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   from http import HTTPStatus
+
+   import requests
+   import responses
+
+   from openapi_mock import add_openapi_to_responses
+
+   spec = {
+       "openapi": "3.0.0",
+       "paths": {"/pets": {"get": {"responses": {"200": {"description": "OK"}}}}},
+   }
+   with responses.RequestsMock() as rsps:
+       add_openapi_to_responses(spec=spec, base_url="https://api.example.com", mock=rsps)
+       response = requests.get(url="https://api.example.com/pets", timeout=30)
+   assert response.status_code == HTTPStatus.OK
+
 .. _respx: https://lundberg.github.io/respx/
+.. _responses: https://github.com/getsentry/responses
