@@ -23,8 +23,8 @@ def _run_respx(
     spec: dict[str, Any],
     url: str,
     base_url: str,
-    method: HTTPMethod = HTTPMethod.GET,
-    params: dict[str, Any] | None = None,
+    method: HTTPMethod,
+    params: dict[str, Any] | None,
 ) -> _Response:
     """Run a request against the respx backend."""
     with respx.mock(base_url=base_url, assert_all_called=False) as m:
@@ -40,8 +40,8 @@ def _run_responses(
     spec: dict[str, Any],
     url: str,
     base_url: str,
-    method: HTTPMethod = HTTPMethod.GET,
-    params: dict[str, Any] | None = None,
+    method: HTTPMethod,
+    params: dict[str, Any] | None,
 ) -> _Response:
     """Run a request against the responses backend."""
     with responses.RequestsMock() as rsps:
@@ -58,8 +58,8 @@ def _run(
     spec: dict[str, Any],
     url: str,
     base_url: str,
-    method: HTTPMethod = HTTPMethod.GET,
-    params: dict[str, Any] | None = None,
+    method: HTTPMethod,
+    params: dict[str, Any] | None,
 ) -> _Response:
     """Run a request against the given backend."""
     if backend == "respx":
@@ -94,7 +94,14 @@ def test_empty_responses_returns_200_empty(backend: str) -> None:
         "openapi": "3.0.0",
         "paths": {"/pets": {"get": {"responses": {}}}},
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -118,7 +125,14 @@ def test_simple_path(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -134,7 +148,14 @@ def test_simple_path_description_only(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -160,7 +181,14 @@ def test_yaml_integer_status_keys(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 1}
 
@@ -212,7 +240,14 @@ def test_uses_example_when_present(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 1, "name": "Fluffy"}
 
@@ -247,7 +282,14 @@ def test_uses_examples_when_no_example(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 10, "name": "Max"}
 
@@ -277,7 +319,14 @@ def test_examples_empty_falls_back_to_schema(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 0}
 
@@ -312,7 +361,14 @@ def test_examples_without_value_falls_back_to_schema(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 0}
 
@@ -345,7 +401,14 @@ def test_generates_from_schema_when_no_example(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 0, "name": ""}
 
@@ -372,7 +435,12 @@ def test_path_param(backend: str) -> None:
         },
     }
     resp = _run(
-        backend=backend, spec=spec, url=f"{BASE_URL}/pets/42", base_url=BASE_URL
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets/42",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
     )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 1, "name": "Fluffy"}
@@ -400,7 +468,12 @@ def test_path_with_dots(backend: str) -> None:
         },
     }
     resp = _run(
-        backend=backend, spec=spec, url=f"{BASE_URL}/api/v1.0/pets", base_url=BASE_URL
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/api/v1.0/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
     )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"version": "1.0"}
@@ -436,7 +509,14 @@ def test_schema_primitives(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/data", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/data",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"s": "", "n": 0, "i": 0, "b": False, "x": None}
 
@@ -468,7 +548,14 @@ def test_schema_type_array_openapi_31(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/data", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/data",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"name": "", "count": 0}
 
@@ -494,7 +581,14 @@ def test_array_without_items(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/items", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/items",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == []
 
@@ -638,6 +732,7 @@ def test_query_params(backend: str) -> None:
         spec=spec,
         url=f"{BASE_URL}/pets",
         base_url=BASE_URL,
+        method=HTTPMethod.GET,
         params={"limit": 10},
     )
     assert resp.status_code == HTTPStatus.OK
@@ -667,7 +762,14 @@ def test_prefers_first_2xx_when_no_200_or_201(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.ACCEPTED
     assert resp.json() == {"status": "pending"}
 
@@ -691,7 +793,14 @@ def test_content_without_schema_or_example(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -717,7 +826,14 @@ def test_unknown_schema_type_returns_empty_object(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/data", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/data",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -743,7 +859,14 @@ def test_schema_non_dict_returns_empty(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -775,7 +898,14 @@ def test_object_skips_non_dict_property_schema(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/data", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/data",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"valid": ""}
 
@@ -795,7 +925,14 @@ def test_response_not_dict_returns_empty(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -822,7 +959,14 @@ def test_non_standard_status_code_returns_int(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == 522
     assert resp.json() == {"error": "Timeout"}
 
@@ -849,7 +993,14 @@ def test_default_response_key_when_no_2xx(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"error": "Something went wrong"}
 
@@ -875,7 +1026,14 @@ def test_first_response_when_no_2xx(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.NOT_FOUND
     assert resp.json() == {"error": "Not found"}
 
@@ -899,7 +1057,14 @@ def test_json_content_not_dict_returns_empty(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -922,7 +1087,14 @@ def test_skips_invalid(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/valid", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/valid",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -961,6 +1133,13 @@ def test_nested_schema_generation(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/users", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/users",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"users": [{"name": ""}]}
