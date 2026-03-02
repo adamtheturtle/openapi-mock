@@ -22,7 +22,6 @@ dynamic = [ "version" ]
 dependencies = [
     "beartype>=0.18",
     "httpx>=0.27.0",
-    "pyyaml>=6.0",
     "responses>=0.25.3",
     "respx>=0.22.0",
 ]
@@ -57,7 +56,6 @@ optional-dependencies.dev = [
     "sphinxcontrib-spelling==8.0.2",
     "sybil[pytest]==9.3.0",
     "ty==0.0.19",
-    "types-pyyaml>=6.0.12",
     "types-requests>=2.32.0",
     "vulture==2.14",
     "yamlfix==1.19.1",
@@ -193,7 +191,6 @@ ignore_names = [
     "add_openapi_to_respx",
     "add_openapi_to_responses",
     "base_url",
-    "load_spec",
     "request",
 ]
 exclude = [ ".venv" ]
