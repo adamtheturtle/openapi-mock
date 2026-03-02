@@ -26,6 +26,18 @@ Or with pip:
 Usage
 -----
 
+Load a spec from a file (JSON or YAML) using ``load_spec``, which uses prance_
+for parsing and resolving ``$ref`` references:
+
+.. code-block:: python
+
+   from openapi_mock import add_openapi_to_respx, load_spec
+
+   spec = load_spec(path="openapi.yaml")
+   with respx.mock(base_url="https://api.example.com", assert_all_called=False) as m:
+       add_openapi_to_respx(mock_obj=m, spec=spec, base_url="https://api.example.com")
+       # ... make requests
+
 With respx (httpx)
 ~~~~~~~~~~~~~~~~~~
 
@@ -68,5 +80,6 @@ With responses (requests)
        response = requests.get(url="https://api.example.com/pets", timeout=30)
    assert response.status_code == HTTPStatus.OK
 
+.. _prance: https://github.com/RonnyPfannschmidt/prance
 .. _respx: https://lundberg.github.io/respx/
 .. _responses: https://github.com/getsentry/responses
