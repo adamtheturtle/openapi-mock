@@ -22,11 +22,8 @@ dynamic = [ "version" ]
 dependencies = [
     "beartype>=0.18",
     "httpx>=0.27.0",
-    "pyyaml>=6.0",
     "responses>=0.25.3",
     "respx>=0.22.0",
-    "starlette>=0.40",
-    "uvicorn>=0.30",
 ]
 optional-dependencies.dev = [
     "actionlint-py==1.7.11.24",
@@ -38,11 +35,11 @@ optional-dependencies.dev = [
     "interrogate==1.7.0",
     "mypy[faster-cache]==1.19.1",
     "mypy-strict-kwargs==2026.1.12",
-    "prek==0.3.3",
+    "prek==0.3.4",
     "pydocstringformatter==0.7.5",
     "pylint[spelling]==4.0.5",
     "pylint-per-file-ignores==3.2.0",
-    "pyproject-fmt==2.16.2",
+    "pyproject-fmt==2.17.0",
     "pyrefly==0.54.0",
     "pyright==1.1.408",
     "pyroma==5.0.1",
@@ -59,14 +56,12 @@ optional-dependencies.dev = [
     "sphinxcontrib-spelling==8.0.2",
     "sybil[pytest]==9.3.0",
     "ty==0.0.19",
-    "types-pyyaml>=6.0.12",
     "types-requests>=2.32.0",
     "vulture==2.14",
     "yamlfix==1.19.1",
 ]
 optional-dependencies.release = [ "check-wheel-contents==0.6.3" ]
 urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentation = "https://adamtheturtle.github.io/openapi-mock/" }
-scripts.openapi-mock = "openapi_mock.cli:main"
 
 [tool.setuptools]
 zip-safe = false
@@ -104,6 +99,7 @@ lint.mccabe.max-complexity = 12
     "docs/source/conf.py:invalid-name",
     "docs/source/doccmd_*.py:missing-module-docstring,invalid-name",
     "doccmd_README_rst_*.py:missing-module-docstring,invalid-name",
+    "tests/test_parametrized.py:too-many-lines,too-many-arguments",
 ]
 "SPELLING".spelling-dict = "en_US"
 "SPELLING".spelling-private-dict-file = "spelling_private_dict.txt"
@@ -194,7 +190,6 @@ ignore_path = [
 ignore_names = [
     "add_openapi_to_respx",
     "add_openapi_to_responses",
-    "main",
     "base_url",
     "request",
 ]
