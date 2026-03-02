@@ -2,12 +2,52 @@
 
 import re
 from http import HTTPStatus
-from typing import Any, cast
+from collections.abc import Mapping
+from typing import Any, Hashable, cast
 
 import httpx
 import respx
 import responses
 from beartype import beartype
+from openapi_core import OpenAPI
+
+
+@beartype
+def _normalize_spec_for_validation(*, spec: dict[str, Any]) -> dict[str, Any]:
+    """
+    Add minimal required fields so openapi-core can validate minimal specs.
+
+    openapi-core requires 'info' with 'title' and 'version'. We add defaults
+    if missing so validation can run on specs that omit them.
+    """
+    normalized = dict(spec)
+    if "info" not in normalized or not isinstance(normalized["info"], dict):
+        normalized["info"] = {"title": "API", "version": "1.0.0"}
+    else:
+        info = normalized["info"]
+        if "title" not in info:
+            info = dict(info) | {"title": "API"}
+        if "version" not in info:
+            info = dict(info) | {"version": "1.0.0"}
+        normalized["info"] = info
+    return normalized
+
+
+@beartype
+def _validate_spec(*, spec: dict[str, Any]) -> bool:
+    """
+    Validate an OpenAPI spec using openapi-core when possible.
+
+    Normalizes minimal specs (adds info if missing) before validation.
+    Returns True if validation succeeded, False if spec is too minimal
+    or non-compliant (caller may still process it leniently).
+    """
+    try:
+        normalized = _normalize_spec_for_validation(spec=spec)
+        OpenAPI.from_dict(data=cast(Mapping[Hashable, Any], normalized))
+        return True
+    except Exception:
+        return False
 
 
 @beartype
@@ -121,6 +161,7 @@ def add_openapi_to_respx(
     mock_obj: respx.MockRouter | respx.Router,
     spec: dict[str, Any],
     base_url: str,
+    validate_spec: bool = True,
 ) -> None:
     """
     Add mock routes from an OpenAPI spec to a respx mock/router.
@@ -128,7 +169,12 @@ def add_openapi_to_respx(
     :param mock_obj: The respx MockRouter or Router to add routes to.
     :param spec: OpenAPI 3.0 or 3.1 spec as a dict (from JSON or YAML).
     :param base_url: Base URL for all routes. Must match ``respx.mock()``.
+    :param validate_spec: If True, validate the spec with openapi-core when
+        possible. Validation is best-effort; minimal or non-compliant specs
+        are still processed leniently. Set to False to skip validation.
     """
+    if validate_spec:
+        _validate_spec(spec=spec)
     paths: dict[str, Any] = spec.get("paths", {}) or {}
 
     for path, path_item in paths.items():
@@ -189,6 +235,7 @@ def add_openapi_to_responses(
     spec: dict[str, Any],
     base_url: str,
     mock: responses.RequestsMock | None = None,
+    validate_spec: bool = True,
 ) -> None:
     """
     Add mock routes from an OpenAPI spec to the responses library.
@@ -201,7 +248,12 @@ def add_openapi_to_responses(
     :param mock: Optional RequestsMock instance. If given, routes are added to
         this mock instead of the default. Use when using ``responses.RequestsMock``
         as a context manager.
+    :param validate_spec: If True, validate the spec with openapi-core when
+        possible. Validation is best-effort; minimal or non-compliant specs
+        are still processed leniently. Set to False to skip validation.
     """
+    if validate_spec:
+        _validate_spec(spec=spec)
     add_fn = (mock or responses).add
     paths: dict[str, Any] = spec.get("paths", {}) or {}
 

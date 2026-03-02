@@ -25,10 +25,13 @@ def _run_respx(
     base_url: str,
     method: HTTPMethod,
     params: dict[str, Any] | None,
+    validate_spec: bool = True,
 ) -> _Response:
     """Run a request against the respx backend."""
     with respx.mock(base_url=base_url, assert_all_called=False) as m:
-        add_openapi_to_respx(mock_obj=m, spec=spec, base_url=base_url)
+        add_openapi_to_respx(
+            mock_obj=m, spec=spec, base_url=base_url, validate_spec=validate_spec
+        )
         if method == HTTPMethod.GET:
             return httpx.request(method=method, url=url, params=params)
         return httpx.request(method=method, url=url, json=params or {})
@@ -42,10 +45,13 @@ def _run_responses(
     base_url: str,
     method: HTTPMethod,
     params: dict[str, Any] | None,
+    validate_spec: bool = True,
 ) -> _Response:
     """Run a request against the responses backend."""
     with responses.RequestsMock() as rsps:
-        add_openapi_to_responses(spec=spec, base_url=base_url, mock=rsps)
+        add_openapi_to_responses(
+            spec=spec, base_url=base_url, mock=rsps, validate_spec=validate_spec
+        )
         if method == HTTPMethod.GET:
             return requests.request(method=method, url=url, params=params, timeout=30)
         return requests.request(method=method, url=url, json=params or {}, timeout=30)
@@ -60,26 +66,47 @@ def _run(
     base_url: str,
     method: HTTPMethod,
     params: dict[str, Any] | None,
+    validate_spec: bool = True,
 ) -> _Response:
     """Run a request against the given backend."""
     if backend == "respx":
         return _run_respx(
-            spec=spec, url=url, base_url=base_url, method=method, params=params
+            spec=spec,
+            url=url,
+            base_url=base_url,
+            method=method,
+            params=params,
+            validate_spec=validate_spec,
         )
     return _run_responses(
-        spec=spec, url=url, base_url=base_url, method=method, params=params
+        spec=spec,
+        url=url,
+        base_url=base_url,
+        method=method,
+        params=params,
+        validate_spec=validate_spec,
     )
 
 
 @beartype
-def _setup(*, backend: str, spec: dict[str, Any], base_url: str) -> None:
+def _setup(
+    *,
+    backend: str,
+    spec: dict[str, Any],
+    base_url: str,
+    validate_spec: bool = True,
+) -> None:
     """Set up mock from spec (no request). Verifies setup does not crash."""
     if backend == "respx":
         with respx.mock(base_url=base_url, assert_all_called=False) as m:
-            add_openapi_to_respx(mock_obj=m, spec=spec, base_url=base_url)
+            add_openapi_to_respx(
+                mock_obj=m, spec=spec, base_url=base_url, validate_spec=validate_spec
+            )
     else:
         with responses.RequestsMock() as rsps:
-            add_openapi_to_responses(spec=spec, base_url=base_url, mock=rsps)
+            add_openapi_to_responses(
+                spec=spec, base_url=base_url, mock=rsps, validate_spec=validate_spec
+            )
 
 
 _BACKEND = pytest.mark.parametrize(
@@ -1023,3 +1050,95 @@ def test_nested_schema_generation(backend: str) -> None:
     )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"users": [{"name": ""}]}
+
+
+@_BACKEND
+def test_openapi_core_validates_compliant_spec(backend: str) -> None:
+    """Fully compliant OpenAPI spec is validated by openapi-core."""
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "Petstore", "version": "1.0.0"},
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "List of pets",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"type": "array", "items": {"type": "object"}},
+                                    "example": [{"id": 1, "name": "Fluffy"}],
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == [{"id": 1, "name": "Fluffy"}]
+
+
+@_BACKEND
+@pytest.mark.parametrize(
+    argnames="info",
+    argvalues=[
+        pytest.param({"title": "API"}, id="missing_version"),
+        pytest.param({"version": "1.0.0"}, id="missing_title"),
+    ],
+)
+def test_normalize_spec_adds_missing_info_fields(
+    backend: str, info: dict[str, Any]
+) -> None:
+    """Spec with info missing title or version is normalized for validation."""
+    spec = {
+        "openapi": "3.0.0",
+        "info": info,
+        "paths": {
+            "/health": {
+                "get": {
+                    "responses": {
+                        "200": {"description": "OK", "content": {"application/json": {"example": {"ok": True}}}},
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/health",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"ok": True}
+
+
+@_BACKEND
+def test_validate_spec_false_skips_validation(backend: str) -> None:
+    """When validate_spec=False, openapi-core validation is skipped."""
+    spec = {
+        "paths": {"/skip": {"get": {"responses": {"200": {"description": "OK"}}}}},
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/skip",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+        validate_spec=False,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {}

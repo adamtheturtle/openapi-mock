@@ -4,6 +4,7 @@ openapi-mock
 |Build Status| |PyPI|
 
 Serve an OpenAPI spec as a mock with `respx`_ or `responses`_.
+Uses `openapi-core`_ for spec validation when possible.
 
 .. |Build Status| image:: https://github.com/adamtheturtle/openapi-mock/actions/workflows/ci.yml/badge.svg?branch=main
    :target: https://github.com/adamtheturtle/openapi-mock/actions/workflows/ci.yml
@@ -70,3 +71,4 @@ With responses (requests)
 
 .. _respx: https://lundberg.github.io/respx/
 .. _responses: https://github.com/getsentry/responses
+.. _openapi-core: https://github.com/python-openapi/openapi-core
