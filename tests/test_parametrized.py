@@ -30,8 +30,8 @@ def _run_respx(
     with respx.mock(base_url=base_url, assert_all_called=False) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url=base_url)
         if method == HTTPMethod.GET:
-            return httpx.get(url=url, params=params)
-        return httpx.post(url=url, json=params or {})
+            return httpx.request(method=method, url=url, params=params)
+        return httpx.request(method=method, url=url, json=params or {})
 
 
 @beartype
@@ -47,21 +47,18 @@ def _run_responses(
     with responses.RequestsMock() as rsps:
         add_openapi_to_responses(spec=spec, base_url=base_url, mock=rsps)
         if method == HTTPMethod.GET:
-            return requests.get(url=url, params=params, timeout=30)
-        return requests.post(url=url, json=params or {}, timeout=30)
+            return requests.request(method=method, url=url, params=params, timeout=30)
+        return requests.request(method=method, url=url, json=params or {}, timeout=30)
 
 
 @beartype
-def _run(
-    *,
-    backend: str,
-    spec: dict[str, Any],
-    url: str,
-    base_url: str,
-    method: HTTPMethod = HTTPMethod.GET,
-    params: dict[str, Any] | None = None,
-) -> _Response:
+def _run(*, backend: str, **kwargs: Any) -> _Response:
     """Run a request against the given backend."""
+    spec = kwargs["spec"]
+    url = kwargs["url"]
+    base_url = kwargs["base_url"]
+    method = kwargs.get("method", HTTPMethod.GET)
+    params = kwargs.get("params")
     if backend == "respx":
         return _run_respx(
             spec=spec, url=url, base_url=base_url, method=method, params=params
@@ -530,6 +527,104 @@ def test_post_path(backend: str) -> None:
     )
     assert resp.status_code == HTTPStatus.CREATED
     assert resp.json() == {"id": 1, "name": "Fluffy"}
+
+
+@_BACKEND
+def test_put_path(backend: str) -> None:
+    """A PUT path is mocked (both backends)."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets/1": {
+                "put": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "example": {"id": 1, "name": "Updated"},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets/1",
+        base_url=BASE_URL,
+        method=HTTPMethod.PUT,
+        params={"name": "Updated"},
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 1, "name": "Updated"}
+
+
+@_BACKEND
+def test_delete_path(backend: str) -> None:
+    """A DELETE path is mocked (both backends)."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets/1": {
+                "delete": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "example": {"deleted": True},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets/1",
+        base_url=BASE_URL,
+        method=HTTPMethod.DELETE,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"deleted": True}
+
+
+@_BACKEND
+def test_patch_path(backend: str) -> None:
+    """A PATCH path is mocked (both backends)."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets/1": {
+                "patch": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "example": {"id": 1, "name": "Patched"},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets/1",
+        base_url=BASE_URL,
+        method=HTTPMethod.PATCH,
+        params={"name": "Patched"},
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 1, "name": "Patched"}
 
 
 @_BACKEND
