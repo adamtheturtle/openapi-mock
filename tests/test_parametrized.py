@@ -530,18 +530,32 @@ def test_post_path(backend: str) -> None:
 
 
 @_BACKEND
-def test_put_path(backend: str) -> None:
-    """A PUT path is mocked (both backends)."""
+@pytest.mark.parametrize(
+    ("method", "params", "example"),
+    [
+        (HTTPMethod.PUT, {"name": "Updated"}, {"id": 1, "name": "Updated"}),
+        (HTTPMethod.DELETE, None, {"deleted": True}),
+        (HTTPMethod.PATCH, {"name": "Patched"}, {"id": 1, "name": "Patched"}),
+    ],
+    ids=["put", "delete", "patch"],
+)
+def test_mutating_path(
+    backend: str,
+    method: HTTPMethod,
+    params: dict[str, Any] | None,
+    example: dict[str, Any],
+) -> None:
+    """PUT, DELETE, and PATCH paths are mocked (both backends)."""
     spec = {
         "openapi": "3.0.0",
         "paths": {
             "/pets/1": {
-                "put": {
+                method.value.lower(): {
                     "responses": {
                         "200": {
                             "content": {
                                 "application/json": {
-                                    "example": {"id": 1, "name": "Updated"},
+                                    "example": example,
                                 },
                             },
                         },
@@ -555,76 +569,11 @@ def test_put_path(backend: str) -> None:
         spec=spec,
         url=f"{BASE_URL}/pets/1",
         base_url=BASE_URL,
-        method=HTTPMethod.PUT,
-        params={"name": "Updated"},
+        method=method,
+        params=params,
     )
     assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {"id": 1, "name": "Updated"}
-
-
-@_BACKEND
-def test_delete_path(backend: str) -> None:
-    """A DELETE path is mocked (both backends)."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/pets/1": {
-                "delete": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "example": {"deleted": True},
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }
-    resp = _run(
-        backend=backend,
-        spec=spec,
-        url=f"{BASE_URL}/pets/1",
-        base_url=BASE_URL,
-        method=HTTPMethod.DELETE,
-    )
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {"deleted": True}
-
-
-@_BACKEND
-def test_patch_path(backend: str) -> None:
-    """A PATCH path is mocked (both backends)."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/pets/1": {
-                "patch": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "example": {"id": 1, "name": "Patched"},
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }
-    resp = _run(
-        backend=backend,
-        spec=spec,
-        url=f"{BASE_URL}/pets/1",
-        base_url=BASE_URL,
-        method=HTTPMethod.PATCH,
-        params={"name": "Patched"},
-    )
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {"id": 1, "name": "Patched"}
+    assert resp.json() == example
 
 
 @_BACKEND
