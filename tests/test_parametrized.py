@@ -23,8 +23,8 @@ def _run_respx(
     spec: dict[str, Any],
     url: str,
     base_url: str,
-    method: HTTPMethod = HTTPMethod.GET,
-    params: dict[str, Any] | None = None,
+    method: HTTPMethod,
+    params: dict[str, Any] | None,
 ) -> _Response:
     """Run a request against the respx backend."""
     with respx.mock(base_url=base_url, assert_all_called=False) as m:
@@ -40,8 +40,8 @@ def _run_responses(
     spec: dict[str, Any],
     url: str,
     base_url: str,
-    method: HTTPMethod = HTTPMethod.GET,
-    params: dict[str, Any] | None = None,
+    method: HTTPMethod,
+    params: dict[str, Any] | None,
 ) -> _Response:
     """Run a request against the responses backend."""
     with responses.RequestsMock() as rsps:
@@ -58,8 +58,8 @@ def _run(
     spec: dict[str, Any],
     url: str,
     base_url: str,
-    method: HTTPMethod = HTTPMethod.GET,
-    params: dict[str, Any] | None = None,
+    method: HTTPMethod,
+    params: dict[str, Any] | None,
 ) -> _Response:
     """Run a request against the given backend."""
     if backend == "respx":
@@ -94,7 +94,14 @@ def test_empty_responses_returns_200_empty(backend: str) -> None:
         "openapi": "3.0.0",
         "paths": {"/pets": {"get": {"responses": {}}}},
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -118,7 +125,14 @@ def test_simple_path(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -134,7 +148,14 @@ def test_simple_path_description_only(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -160,29 +181,29 @@ def test_yaml_integer_status_keys(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 1}
 
 
 @_BACKEND
-def test_skips_non_dict_path_item(backend: str) -> None:
-    """Non-dict path items are skipped."""
-    spec = {"paths": {"/pets": "invalid"}}
-    _setup(backend=backend, spec=spec, base_url=BASE_URL)
-
-
-@_BACKEND
-def test_skips_non_http_methods(backend: str) -> None:
-    """Non-HTTP methods are skipped."""
-    spec: dict[str, object] = {"paths": {"/pets": {"parameters": []}}}
-    _setup(backend=backend, spec=spec, base_url=BASE_URL)
-
-
-@_BACKEND
-def test_skips_non_dict_operation(backend: str) -> None:
-    """Non-dict operations are skipped."""
-    spec = {"paths": {"/pets": {"get": "invalid"}}}
+@pytest.mark.parametrize(
+    argnames="spec",
+    argvalues=[
+        pytest.param({"paths": {"/pets": "invalid"}}, id="non_dict_path_item"),
+        pytest.param({"paths": {"/pets": {"parameters": []}}}, id="non_http_method"),
+        pytest.param({"paths": {"/pets": {"get": "invalid"}}}, id="non_dict_operation"),
+    ],
+)
+def test_setup_does_not_crash(backend: str, spec: dict[str, Any]) -> None:
+    """Invalid or non-standard spec inputs are skipped without crashing."""
     _setup(backend=backend, spec=spec, base_url=BASE_URL)
 
 
@@ -212,7 +233,14 @@ def test_uses_example_when_present(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 1, "name": "Fluffy"}
 
@@ -247,14 +275,36 @@ def test_uses_examples_when_no_example(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 10, "name": "Max"}
 
 
 @_BACKEND
-def test_examples_empty_falls_back_to_schema(backend: str) -> None:
-    """OpenAPI 3.1: empty examples dict falls back to schema."""
+@pytest.mark.parametrize(
+    argnames="examples",
+    argvalues=[
+        pytest.param({}, id="empty_examples"),
+        pytest.param(
+            {
+                "external": {
+                    "summary": "External only",
+                    "externalValue": "https://example.com/pet.json",
+                },
+            },
+            id="external_value_only",
+        ),
+    ],
+)
+def test_examples_fallback_to_schema(backend: str, examples: dict[str, Any]) -> None:
+    """OpenAPI 3.1: examples without a usable value falls back to schema."""
     spec = {
         "openapi": "3.1.0",
         "paths": {
@@ -264,7 +314,7 @@ def test_examples_empty_falls_back_to_schema(backend: str) -> None:
                         "200": {
                             "content": {
                                 "application/json": {
-                                    "examples": {},
+                                    "examples": examples,
                                     "schema": {
                                         "type": "object",
                                         "properties": {"id": {"type": "integer"}},
@@ -277,42 +327,14 @@ def test_examples_empty_falls_back_to_schema(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {"id": 0}
-
-
-@_BACKEND
-def test_examples_without_value_falls_back_to_schema(backend: str) -> None:
-    """OpenAPI 3.1: examples with only externalValue falls back to schema."""
-    spec = {
-        "openapi": "3.1.0",
-        "paths": {
-            "/pets": {
-                "get": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "examples": {
-                                        "external": {
-                                            "summary": "External only",
-                                            "externalValue": "https://example.com/pet.json",
-                                        },
-                                    },
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {"id": {"type": "integer"}},
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 0}
 
@@ -345,7 +367,14 @@ def test_generates_from_schema_when_no_example(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 0, "name": ""}
 
@@ -372,7 +401,12 @@ def test_path_param(backend: str) -> None:
         },
     }
     resp = _run(
-        backend=backend, spec=spec, url=f"{BASE_URL}/pets/42", base_url=BASE_URL
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets/42",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
     )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"id": 1, "name": "Fluffy"}
@@ -400,7 +434,12 @@ def test_path_with_dots(backend: str) -> None:
         },
     }
     resp = _run(
-        backend=backend, spec=spec, url=f"{BASE_URL}/api/v1.0/pets", base_url=BASE_URL
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/api/v1.0/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
     )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"version": "1.0"}
@@ -436,7 +475,14 @@ def test_schema_primitives(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/data", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/data",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"s": "", "n": 0, "i": 0, "b": False, "x": None}
 
@@ -468,7 +514,14 @@ def test_schema_type_array_openapi_31(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/data", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/data",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"name": "", "count": 0}
 
@@ -494,7 +547,14 @@ def test_array_without_items(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/items", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/items",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == []
 
@@ -638,6 +698,7 @@ def test_query_params(backend: str) -> None:
         spec=spec,
         url=f"{BASE_URL}/pets",
         base_url=BASE_URL,
+        method=HTTPMethod.GET,
         params={"limit": 10},
     )
     assert resp.status_code == HTTPStatus.OK
@@ -667,14 +728,32 @@ def test_prefers_first_2xx_when_no_200_or_201(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.ACCEPTED
     assert resp.json() == {"status": "pending"}
 
 
 @_BACKEND
-def test_content_without_schema_or_example(backend: str) -> None:
-    """Empty object when content has neither schema nor example."""
+@pytest.mark.parametrize(
+    argnames="json_content",
+    argvalues=[
+        pytest.param({}, id="empty_content"),
+        pytest.param({"schema": {}}, id="unknown_schema_type"),
+        pytest.param({"schema": True}, id="non_dict_schema"),
+        pytest.param("invalid", id="non_dict_json_content"),
+    ],
+)
+def test_missing_or_invalid_content_returns_empty(
+    backend: str, json_content: Any
+) -> None:
+    """Missing or invalid application/json content returns 200 with empty body."""
     spec = {
         "openapi": "3.0.0",
         "paths": {
@@ -683,7 +762,7 @@ def test_content_without_schema_or_example(backend: str) -> None:
                     "responses": {
                         "200": {
                             "content": {
-                                "application/json": {},
+                                "application/json": json_content,
                             },
                         },
                     },
@@ -691,59 +770,14 @@ def test_content_without_schema_or_example(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {}
-
-
-@_BACKEND
-def test_unknown_schema_type_returns_empty_object(backend: str) -> None:
-    """Unknown or missing schema type returns empty object."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/data": {
-                "get": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "schema": {},
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/data", base_url=BASE_URL)
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {}
-
-
-@_BACKEND
-def test_schema_non_dict_returns_empty(backend: str) -> None:
-    """Non-dict schema (e.g. OpenAPI 3.1 boolean true) does not crash."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/pets": {
-                "get": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "schema": True,
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -775,7 +809,14 @@ def test_object_skips_non_dict_property_schema(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/data", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/data",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"valid": ""}
 
@@ -795,7 +836,14 @@ def test_response_not_dict_returns_empty(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -822,7 +870,14 @@ def test_non_standard_status_code_returns_int(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == 522
     assert resp.json() == {"error": "Timeout"}
 
@@ -849,7 +904,14 @@ def test_default_response_key_when_no_2xx(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"error": "Something went wrong"}
 
@@ -875,33 +937,16 @@ def test_first_response_when_no_2xx(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.NOT_FOUND
     assert resp.json() == {"error": "Not found"}
-
-
-@_BACKEND
-def test_json_content_not_dict_returns_empty(backend: str) -> None:
-    """When application/json content is not a dict, returns empty."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/pets": {
-                "get": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": "invalid",
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/pets", base_url=BASE_URL)
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {}
 
 
 @_BACKEND
@@ -922,7 +967,14 @@ def test_skips_invalid(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/valid", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/valid",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {}
 
@@ -961,6 +1013,13 @@ def test_nested_schema_generation(backend: str) -> None:
             },
         },
     }
-    resp = _run(backend=backend, spec=spec, url=f"{BASE_URL}/users", base_url=BASE_URL)
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/users",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"users": [{"name": ""}]}
