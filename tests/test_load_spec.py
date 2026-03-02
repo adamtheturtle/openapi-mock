@@ -16,7 +16,7 @@ def test_load_json(tmp_path: Path) -> None:
     assert result == spec
 
 
-@pytest.mark.parametrize("extension", [".yaml", ".yml"])
+@pytest.mark.parametrize(argnames="extension", argvalues=[".yaml", ".yml"])
 def test_load_yaml(tmp_path: Path, extension: str) -> None:
     """YAML and YML files are loaded correctly."""
     path = tmp_path / f"spec{extension}"
@@ -41,7 +41,7 @@ def test_unsupported_format_raises(tmp_path: Path) -> None:
         load_spec(path=path)
 
 
-@pytest.mark.parametrize("content", ["", "null"], ids=["empty", "null"])
+@pytest.mark.parametrize(argnames="content", argvalues=["", "null"], ids=["empty", "null"])
 def test_invalid_yaml_raises(tmp_path: Path, content: str) -> None:
     """Empty or null YAML files raise ValueError."""
     path = tmp_path / "spec.yaml"

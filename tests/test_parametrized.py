@@ -531,8 +531,8 @@ def test_post_path(backend: str) -> None:
 
 @_BACKEND
 @pytest.mark.parametrize(
-    ("method", "params", "example"),
-    [
+    argnames=("method", "params", "example"),
+    argvalues=[
         (HTTPMethod.PUT, {"name": "Updated"}, {"id": 1, "name": "Updated"}),
         (HTTPMethod.DELETE, None, {"deleted": True}),
         (HTTPMethod.PATCH, {"name": "Patched"}, {"id": 1, "name": "Patched"}),
