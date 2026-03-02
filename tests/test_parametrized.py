@@ -303,9 +303,7 @@ def test_uses_examples_when_no_example(backend: str) -> None:
         ),
     ],
 )
-def test_examples_fallback_to_schema(
-    backend: str, examples: dict[str, Any]
-) -> None:
+def test_examples_fallback_to_schema(backend: str, examples: dict[str, Any]) -> None:
     """OpenAPI 3.1: examples without a usable value falls back to schema."""
     spec = {
         "openapi": "3.1.0",
@@ -784,8 +782,6 @@ def test_missing_or_invalid_content_returns_empty(
     assert resp.json() == {}
 
 
-
-
 @_BACKEND
 def test_object_skips_non_dict_property_schema(backend: str) -> None:
     """Object properties with non-dict schema are skipped."""
@@ -951,8 +947,6 @@ def test_first_response_when_no_2xx(backend: str) -> None:
     )
     assert resp.status_code == HTTPStatus.NOT_FOUND
     assert resp.json() == {"error": "Not found"}
-
-
 
 
 @_BACKEND
