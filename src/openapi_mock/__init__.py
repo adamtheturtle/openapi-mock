@@ -1,15 +1,12 @@
 """Package for serving an OpenAPI spec as a mock with respx or responses."""
 
-import json
 import re
 from http import HTTPStatus
-from pathlib import Path
 from typing import Any, cast
 
 import httpx
 import respx
 import responses
-import yaml
 from beartype import beartype
 
 
@@ -116,28 +113,6 @@ def _get_response_body(*, operation: dict[str, Any]) -> tuple[int | HTTPStatus, 
     if isinstance(schema, dict):
         return default_status, _generate_from_schema(schema=schema)
     return default_status, {}
-
-
-@beartype
-def load_spec(path: str | Path) -> dict[str, Any]:
-    """
-    Load an OpenAPI spec from a file (JSON or YAML).
-
-    :param path: Path to the spec file (``.json`` or ``.yaml``/``.yml``).
-    :return: OpenAPI spec as a dict.
-    """
-    path = Path(path)
-    text = path.read_text()
-    suffix = path.suffix.lower()
-    if suffix == ".json":
-        return cast(dict[str, Any], json.loads(s=text))
-    if suffix in (".yaml", ".yml"):
-        result: Any = yaml.safe_load(stream=text)
-        if result is None:
-            raise ValueError("Empty or null YAML spec")
-        return cast(dict[str, Any], result)
-    msg = f"Unsupported format: {suffix}. Use .json, .yaml, or .yml"
-    raise ValueError(msg)
 
 
 @beartype
