@@ -77,7 +77,8 @@ def _preprocess_content(*, content: dict[str, Any]) -> dict[str, Any]:
 
 @beartype
 def _preprocess_responses(
-    *, raw_responses: dict[str | int, Any],
+    *,
+    raw_responses: dict[str | int, Any],
 ) -> dict[str, Any]:
     """Normalize response dicts: int keys to str, add description, filter invalid."""
     new_responses: dict[str, Any] = {}
@@ -423,20 +424,12 @@ def add_openapi_to_respx(
             mock_obj.route(
                 method=method.upper(),
                 path__regex=re.compile(pattern=f"^{path_pattern}$"),
-            ).mock(
-                return_value=httpx.Response(
-                    status_code=status_code, json=json_body
-                )
-            )
+            ).mock(return_value=httpx.Response(status_code=status_code, json=json_body))
         else:
             mock_obj.route(
                 method=method.upper(),
                 path=path,
-            ).mock(
-                return_value=httpx.Response(
-                    status_code=status_code, json=json_body
-                )
-            )
+            ).mock(return_value=httpx.Response(status_code=status_code, json=json_body))
 
 
 @beartype
@@ -494,9 +487,7 @@ def add_openapi_to_responses(
             operation=operation,
             components=components,
         )
-        code = (
-            int(status_code) if isinstance(status_code, HTTPStatus) else status_code
-        )
+        code = int(status_code) if isinstance(status_code, HTTPStatus) else status_code
         url_pattern = _path_to_url_pattern(base_url=base_url, path=path)
         add_fn(
             method=method.upper(),
