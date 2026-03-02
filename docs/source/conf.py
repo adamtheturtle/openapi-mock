@@ -87,6 +87,7 @@ nitpicky = True
 nitpick_ignore = [
     ("py:class", "respx.router.MockRouter"),
     ("py:class", "respx.router.Router"),
+    ("py:class", "responses.RequestsMock"),
 ]
 
 spelling_word_list_filename = "../../spelling_private_dict.txt"
