@@ -1023,3 +1023,756 @@ def test_nested_schema_generation(backend: str) -> None:
     )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"users": [{"name": ""}]}
+
+
+@_BACKEND
+def test_spec_with_info(backend: str) -> None:
+    """Spec with info field parses correctly."""
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "My API", "version": "1.0.0"},
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "example": {"id": 1},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 1}
+
+
+@_BACKEND
+def test_no_paths_key(backend: str) -> None:
+    """Spec with no paths key does not crash."""
+    spec: dict[str, Any] = {"openapi": "3.0.0"}
+    _setup(backend=backend, spec=spec, base_url=BASE_URL)
+
+
+@_BACKEND
+def test_operation_responses_not_dict(backend: str) -> None:
+    """Operation with non-dict responses is still registered."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {"responses": "invalid"},
+            },
+        },
+    }
+    _setup(backend=backend, spec=spec, base_url=BASE_URL)
+
+
+@_BACKEND
+def test_path_item_unknown_key(backend: str) -> None:
+    """Unknown keys (e.g. x-extensions) on path items are ignored."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "x-custom": "extension",
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "example": {"id": 1},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 1}
+
+
+@_BACKEND
+def test_unparseable_spec(backend: str) -> None:
+    """Spec that fails model_validate after preprocessing does not crash."""
+    spec: dict[str, Any] = {
+        "openapi": "3.0.0",
+        "servers": "invalid",
+        "paths": {},
+    }
+    _setup(backend=backend, spec=spec, base_url=BASE_URL)
+
+
+@_BACKEND
+def test_ref_schema_bad_prefix(backend: str) -> None:
+    """Schema $ref with unexpected prefix skips the property."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "pet": {
+                                                "$ref": "#/definitions/Pet",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "properties": {"name": {"type": "string"}},
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {}
+
+
+@_BACKEND
+def test_ref_array_items_unresolvable(backend: str) -> None:
+    """Array items with unresolvable $ref returns empty array."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/Missing",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == []
+
+
+@_BACKEND
+def test_ref_response_no_components(backend: str) -> None:
+    """Response $ref with no components returns empty body."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/Missing"},
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {}
+
+
+@_BACKEND
+def test_ref_response_bad_prefix(backend: str) -> None:
+    """Response $ref with unexpected prefix returns empty body."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {"$ref": "#/definitions/MyResponse"},
+                    },
+                },
+            },
+        },
+        "components": {
+            "responses": {
+                "MyResponse": {
+                    "description": "OK",
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {}
+
+
+@_BACKEND
+def test_ref_example_no_value(backend: str) -> None:
+    """Example $ref that resolves but has no value falls back to schema."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "pet": {
+                                            "$ref": "#/components/examples/NoValue",
+                                        },
+                                    },
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {"type": "string"},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "examples": {
+                "NoValue": {
+                    "summary": "Example with no value",
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"name": ""}
+
+
+@_BACKEND
+def test_ref_example_no_components(backend: str) -> None:
+    """Example $ref with no components falls back to schema."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "pet": {
+                                            "$ref": "#/components/examples/Missing",
+                                        },
+                                    },
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "integer"},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 0}
+
+
+@_BACKEND
+def test_ref_example_bad_prefix(backend: str) -> None:
+    """Example $ref with unexpected prefix falls back to schema."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "pet": {
+                                            "$ref": "#/definitions/MyExample",
+                                        },
+                                    },
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "integer"},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "examples": {
+                "MyExample": {
+                    "value": {"id": 5},
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 0}
+
+
+@_BACKEND
+def test_ref_response_double_ref(backend: str) -> None:
+    """Response component that itself is a $ref returns empty body."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/Alias"},
+                    },
+                },
+            },
+        },
+        "components": {
+            "responses": {
+                "Alias": {"$ref": "#/components/responses/Actual"},
+                "Actual": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "example": {"id": 1},
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {}
+
+
+@_BACKEND
+def test_ref_example_double_ref(backend: str) -> None:
+    """Example component that itself is a $ref falls back to schema."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "pet": {
+                                            "$ref": "#/components/examples/Alias",
+                                        },
+                                    },
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "integer"},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "examples": {
+                "Alias": {"$ref": "#/components/examples/Actual"},
+                "Actual": {
+                    "value": {"id": 5},
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 0}
+
+
+@_BACKEND
+def test_ref_schema_in_response(backend: str) -> None:
+    """Schema $ref in response content is resolved."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Pet",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"},
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 0, "name": ""}
+
+
+@_BACKEND
+def test_ref_response(backend: str) -> None:
+    """Response $ref is resolved."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/PetResponse"},
+                    },
+                },
+            },
+        },
+        "components": {
+            "responses": {
+                "PetResponse": {
+                    "description": "A pet",
+                    "content": {
+                        "application/json": {
+                            "example": {"id": 1, "name": "Rex"},
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 1, "name": "Rex"}
+
+
+@_BACKEND
+def test_ref_nested_schema_property(backend: str) -> None:
+    """Schema property $ref is resolved."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/users": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "pet": {
+                                                "$ref": "#/components/schemas/Pet",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "properties": {"name": {"type": "string"}},
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/users",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"pet": {"name": ""}}
+
+
+@_BACKEND
+def test_ref_array_items(backend: str) -> None:
+    """Array items $ref is resolved."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/Pet",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "properties": {"name": {"type": "string"}},
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == [{"name": ""}]
+
+
+@_BACKEND
+def test_ref_example(backend: str) -> None:
+    """Example $ref is resolved."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "pet": {
+                                            "$ref": "#/components/examples/PetExample",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "examples": {
+                "PetExample": {
+                    "summary": "A pet",
+                    "value": {"id": 5, "name": "Buddy"},
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 5, "name": "Buddy"}
+
+
+@_BACKEND
+def test_ref_unresolvable_returns_empty(backend: str) -> None:
+    """Unresolvable $ref returns empty body."""
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/Missing",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {}
