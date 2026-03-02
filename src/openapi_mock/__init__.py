@@ -307,6 +307,24 @@ def _get_example_from_content(
 
 
 @beartype
+def _select_status_key(*, raw_responses: dict[str, Any]) -> str:
+    """Select the best status key from a preprocessed responses dict.
+
+    Prefers 200, then 201, then first 2xx, then first available key.
+    """
+    for preferred in (f"{HTTPStatus.OK.value}", f"{HTTPStatus.CREATED.value}"):
+        if preferred in raw_responses:
+            return preferred
+    for key in raw_responses:
+        if (
+            key.isdigit()
+            and HTTPStatus.OK.value <= int(key) < HTTPStatus.MULTIPLE_CHOICES.value
+        ):
+            return key
+    return next(iter(raw_responses), f"{HTTPStatus.OK.value}")
+
+
+@beartype
 def _get_response_body(
     *,
     operation: Operation,
@@ -321,23 +339,7 @@ def _get_response_body(
     if not raw_responses:
         return HTTPStatus.OK, {}
 
-    # Prefer 200, then 201, then first 2xx, then first
-    for preferred in (f"{HTTPStatus.OK.value}", f"{HTTPStatus.CREATED.value}"):
-        if preferred in raw_responses:
-            status_key = preferred
-            break
-    else:
-        for key in raw_responses:
-            if (
-                key.isdigit()
-                and HTTPStatus.OK.value
-                <= int(key)
-                < HTTPStatus.MULTIPLE_CHOICES.value
-            ):
-                status_key = key
-                break
-        else:
-            status_key = next(iter(raw_responses), f"{HTTPStatus.OK.value}")
+    status_key = _select_status_key(raw_responses=raw_responses)
 
     default_status: int | HTTPStatus = HTTPStatus.OK
     if status_key.isdigit():
