@@ -22,6 +22,7 @@ dynamic = [ "version" ]
 dependencies = [
     "beartype>=0.18",
     "httpx>=0.27.0",
+    "prance[osv]>=25.0",
     "responses>=0.25.3",
     "respx>=0.22.0",
 ]

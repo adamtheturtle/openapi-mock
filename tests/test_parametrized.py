@@ -1023,3 +1023,49 @@ def test_nested_schema_generation(backend: str) -> None:
     )
     assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"users": [{"name": ""}]}
+
+
+@_BACKEND
+def test_ref_resolution(backend: str) -> None:
+    """Internal $ref references are resolved by prance for schema generation."""
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "API", "version": "1.0"},
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/Pet"},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"},
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 0, "name": ""}

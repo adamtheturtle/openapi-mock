@@ -1,5 +1,7 @@
 """Package for serving an OpenAPI spec as a mock with respx or responses."""
 
+import copy
+import json
 import re
 from http import HTTPStatus
 from typing import Any, cast
@@ -8,6 +10,53 @@ import httpx
 import respx
 import responses
 from beartype import beartype
+from prance import ResolvingParser, ValidationError  # type: ignore[import-untyped]
+
+
+@beartype
+def _ensure_spec_valid(*, spec: dict[str, Any]) -> dict[str, Any]:
+    """Add minimal required fields so prance can parse (openapi, info, response description)."""
+    spec = copy.deepcopy(x=spec)
+    if "openapi" not in spec and "swagger" not in spec:
+        spec["openapi"] = "3.0.0"
+    if "info" not in spec:
+        spec["info"] = {"title": "API", "version": "1.0"}
+    paths = spec.get("paths") or {}
+    for path_item in paths.values():
+        if not isinstance(path_item, dict):
+            continue
+        for key, op in list(path_item.items()):
+            if key.lower() not in ("get", "post", "put", "delete", "patch"):
+                continue
+            if not isinstance(op, dict):
+                continue
+            responses = op.get("responses") or {}
+            if not responses:
+                op["responses"] = {"200": {"description": "OK"}}
+            else:
+                for resp in responses.values():
+                    if isinstance(resp, dict) and "description" not in resp:
+                        resp["description"] = "OK"
+    return spec
+
+
+@beartype
+def _resolve_spec(*, spec: dict[str, Any]) -> dict[str, Any]:
+    """
+    Resolve $ref references in an OpenAPI spec using prance.
+
+    When the spec is valid, returns a fully resolved copy (internal $refs inlined).
+    When validation fails, returns the original spec (caller will skip invalid parts).
+    """
+    spec = _ensure_spec_valid(spec=spec)
+    try:
+        parser = ResolvingParser(
+            spec_string=json.dumps(obj=spec),
+            backend="openapi-spec-validator",
+        )
+        return cast(dict[str, Any], parser.specification)
+    except ValidationError:
+        return spec
 
 
 @beartype
@@ -16,7 +65,7 @@ def _generate_from_schema(*, schema: dict[str, Any]) -> Any:
     Generate mock JSON from a JSON Schema (OpenAPI 3.0/3.1 schema subset).
 
     Handles type, properties, items. Supports type as array (OpenAPI 3.1).
-    Does not resolve $ref.
+    $ref is resolved by prance before this is called.
     """
     schema_type = schema.get("type")
     # OpenAPI 3.1 / JSON Schema 2020-12: type can be array, e.g. ["string", "null"]
@@ -127,8 +176,10 @@ def add_openapi_to_respx(
 
     :param mock_obj: The respx MockRouter or Router to add routes to.
     :param spec: OpenAPI 3.0 or 3.1 spec as a dict (from JSON or YAML).
+        Internal ``$ref`` references are resolved via prance.
     :param base_url: Base URL for all routes. Must match ``respx.mock()``.
     """
+    spec = _resolve_spec(spec=spec)
     paths: dict[str, Any] = spec.get("paths", {}) or {}
 
     for path, path_item in paths.items():
@@ -197,11 +248,13 @@ def add_openapi_to_responses(
     When using ``with responses.RequestsMock() as rsps``, pass ``mock=rsps``.
 
     :param spec: OpenAPI 3.0 or 3.1 spec as a dict (from JSON or YAML).
+        Internal ``$ref`` references are resolved via prance.
     :param base_url: Base URL for all routes (e.g. ``https://api.example.com``).
     :param mock: Optional RequestsMock instance. If given, routes are added to
         this mock instead of the default. Use when using ``responses.RequestsMock``
         as a context manager.
     """
+    spec = _resolve_spec(spec=spec)
     add_fn = (mock or responses).add
     paths: dict[str, Any] = spec.get("paths", {}) or {}
 
