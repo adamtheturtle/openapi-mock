@@ -4,7 +4,7 @@ openapi-mock
 |Build Status| |PyPI|
 
 Serve an OpenAPI spec as a mock with `respx`_ or `responses`_.
-Uses `openapi-core`_ for spec validation when possible.
+Uses `openapi-core`_ for spec validation and $ref resolution.
 
 .. |Build Status| image:: https://github.com/adamtheturtle/openapi-mock/actions/workflows/ci.yml/badge.svg?branch=main
    :target: https://github.com/adamtheturtle/openapi-mock/actions/workflows/ci.yml
@@ -41,6 +41,7 @@ With respx (httpx)
 
    spec = {
        "openapi": "3.0.0",
+       "info": {"title": "API", "version": "1.0.0"},
        "paths": {"/pets": {"get": {"responses": {"200": {"description": "OK"}}}}},
    }
    with respx.mock(base_url="https://api.example.com", assert_all_called=False) as m:
@@ -62,6 +63,7 @@ With responses (requests)
 
    spec = {
        "openapi": "3.0.0",
+       "info": {"title": "API", "version": "1.0.0"},
        "paths": {"/pets": {"get": {"responses": {"200": {"description": "OK"}}}}},
    }
    with responses.RequestsMock() as rsps:

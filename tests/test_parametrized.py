@@ -13,6 +13,7 @@ from beartype import beartype
 from openapi_mock import add_openapi_to_respx, add_openapi_to_responses
 
 BASE_URL = "https://api.example.com"
+INFO = {"title": "API", "version": "1.0.0"}
 
 _Response = httpx.Response | requests.Response
 
@@ -25,13 +26,10 @@ def _run_respx(
     base_url: str,
     method: HTTPMethod,
     params: dict[str, Any] | None,
-    validate_spec: bool = True,
 ) -> _Response:
     """Run a request against the respx backend."""
     with respx.mock(base_url=base_url, assert_all_called=False) as m:
-        add_openapi_to_respx(
-            mock_obj=m, spec=spec, base_url=base_url, validate_spec=validate_spec
-        )
+        add_openapi_to_respx(mock_obj=m, spec=spec, base_url=base_url)
         if method == HTTPMethod.GET:
             return httpx.request(method=method, url=url, params=params)
         return httpx.request(method=method, url=url, json=params or {})
@@ -45,13 +43,10 @@ def _run_responses(
     base_url: str,
     method: HTTPMethod,
     params: dict[str, Any] | None,
-    validate_spec: bool = True,
 ) -> _Response:
     """Run a request against the responses backend."""
     with responses.RequestsMock() as rsps:
-        add_openapi_to_responses(
-            spec=spec, base_url=base_url, mock=rsps, validate_spec=validate_spec
-        )
+        add_openapi_to_responses(spec=spec, base_url=base_url, mock=rsps)
         if method == HTTPMethod.GET:
             return requests.request(method=method, url=url, params=params, timeout=30)
         return requests.request(method=method, url=url, json=params or {}, timeout=30)
@@ -66,47 +61,26 @@ def _run(
     base_url: str,
     method: HTTPMethod,
     params: dict[str, Any] | None,
-    validate_spec: bool = True,
 ) -> _Response:
     """Run a request against the given backend."""
     if backend == "respx":
         return _run_respx(
-            spec=spec,
-            url=url,
-            base_url=base_url,
-            method=method,
-            params=params,
-            validate_spec=validate_spec,
+            spec=spec, url=url, base_url=base_url, method=method, params=params
         )
     return _run_responses(
-        spec=spec,
-        url=url,
-        base_url=base_url,
-        method=method,
-        params=params,
-        validate_spec=validate_spec,
+        spec=spec, url=url, base_url=base_url, method=method, params=params
     )
 
 
 @beartype
-def _setup(
-    *,
-    backend: str,
-    spec: dict[str, Any],
-    base_url: str,
-    validate_spec: bool = True,
-) -> None:
+def _setup(*, backend: str, spec: dict[str, Any], base_url: str) -> None:
     """Set up mock from spec (no request). Verifies setup does not crash."""
     if backend == "respx":
         with respx.mock(base_url=base_url, assert_all_called=False) as m:
-            add_openapi_to_respx(
-                mock_obj=m, spec=spec, base_url=base_url, validate_spec=validate_spec
-            )
+            add_openapi_to_respx(mock_obj=m, spec=spec, base_url=base_url)
     else:
         with responses.RequestsMock() as rsps:
-            add_openapi_to_responses(
-                spec=spec, base_url=base_url, mock=rsps, validate_spec=validate_spec
-            )
+            add_openapi_to_responses(spec=spec, base_url=base_url, mock=rsps)
 
 
 _BACKEND = pytest.mark.parametrize(
@@ -116,10 +90,11 @@ _BACKEND = pytest.mark.parametrize(
 
 @_BACKEND
 def test_empty_responses_returns_200_empty(backend: str) -> None:
-    """Operation with empty responses returns 200 and empty body."""
+    """Operation with minimal responses (no content) returns 200 and empty body."""
     spec = {
         "openapi": "3.0.0",
-        "paths": {"/pets": {"get": {"responses": {}}}},
+        "info": INFO,
+        "paths": {"/pets": {"get": {"responses": {"200": {"description": "OK"}}}}},
     }
     resp = _run(
         backend=backend,
@@ -138,11 +113,13 @@ def test_simple_path(backend: str) -> None:
     """A simple GET path is mocked (both backends)."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {"schema": {"type": "object"}},
                             },
@@ -169,6 +146,7 @@ def test_simple_path_description_only(backend: str) -> None:
     """A simple GET path with description only returns 200 and empty body."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {"responses": {"200": {"description": "OK"}}},
@@ -189,14 +167,16 @@ def test_simple_path_description_only(backend: str) -> None:
 
 @_BACKEND
 def test_yaml_integer_status_keys(backend: str) -> None:
-    """YAML unquoted status keys (200:) become ints; must not crash."""
+    """YAML unquoted status keys (200:) become ints; normalized to strings."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
                     "responses": {
-                        200: {
+                        "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "example": {"id": 1},
@@ -224,14 +204,24 @@ def test_yaml_integer_status_keys(backend: str) -> None:
 @pytest.mark.parametrize(
     argnames="spec",
     argvalues=[
-        pytest.param({"paths": {"/pets": "invalid"}}, id="non_dict_path_item"),
-        pytest.param({"paths": {"/pets": {"parameters": []}}}, id="non_http_method"),
-        pytest.param({"paths": {"/pets": {"get": "invalid"}}}, id="non_dict_operation"),
+        pytest.param(
+            {"openapi": "3.0.0", "info": INFO, "paths": {"/pets": "invalid"}},
+            id="non_dict_path_item",
+        ),
+        pytest.param(
+            {
+                "openapi": "3.0.0",
+                "info": INFO,
+                "paths": {"/pets": {"get": "invalid"}},
+            },
+            id="non_dict_operation",
+        ),
     ],
 )
-def test_setup_does_not_crash(backend: str, spec: dict[str, Any]) -> None:
-    """Invalid or non-standard spec inputs are skipped without crashing."""
-    _setup(backend=backend, spec=spec, base_url=BASE_URL)
+def test_invalid_spec_raises(backend: str, spec: dict[str, Any]) -> None:
+    """Invalid specs raise from openapi-core validation."""
+    with pytest.raises(Exception):
+        _setup(backend=backend, spec=spec, base_url=BASE_URL)
 
 
 @_BACKEND
@@ -239,6 +229,7 @@ def test_uses_example_when_present(backend: str) -> None:
     """Response example is used when present in spec."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
@@ -277,11 +268,13 @@ def test_uses_examples_when_no_example(backend: str) -> None:
     """OpenAPI 3.1: examples (plural) - use first example's value."""
     spec = {
         "openapi": "3.1.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "examples": {
@@ -334,11 +327,13 @@ def test_examples_fallback_to_schema(backend: str, examples: dict[str, Any]) -> 
     """OpenAPI 3.1: examples without a usable value falls back to schema."""
     spec = {
         "openapi": "3.1.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "examples": examples,
@@ -371,6 +366,7 @@ def test_generates_from_schema_when_no_example(backend: str) -> None:
     """Mock data is generated from schema when no example is present."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
@@ -411,11 +407,16 @@ def test_path_param(backend: str) -> None:
     """Path params are matched (respx natively, responses via regex)."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets/{id}": {
                 "get": {
+                    "parameters": [
+                        {"name": "id", "in": "path", "required": True, "schema": {"type": "integer"}},
+                    ],
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "example": {"id": 1, "name": "Fluffy"},
@@ -444,11 +445,13 @@ def test_path_with_dots(backend: str) -> None:
     """Literal path segments (e.g. v1.0) match exactly."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/api/v1.0/pets": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "example": {"version": "1.0"},
@@ -477,11 +480,13 @@ def test_schema_primitives(backend: str) -> None:
     """All schema primitive types generate correct placeholders."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/data": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "schema": {
@@ -491,7 +496,7 @@ def test_schema_primitives(backend: str) -> None:
                                             "n": {"type": "number"},
                                             "i": {"type": "integer"},
                                             "b": {"type": "boolean"},
-                                            "x": {"type": "null"},
+                                            "x": {"type": "string", "nullable": True},
                                         },
                                     },
                                 },
@@ -511,7 +516,7 @@ def test_schema_primitives(backend: str) -> None:
         params=None,
     )
     assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {"s": "", "n": 0, "i": 0, "b": False, "x": None}
+    assert resp.json() == {"s": "", "n": 0, "i": 0, "b": False, "x": ""}
 
 
 @_BACKEND
@@ -519,11 +524,13 @@ def test_schema_type_array_openapi_31(backend: str) -> None:
     """OpenAPI 3.1: type as array e.g. ['string', 'null'] uses first non-null."""
     spec = {
         "openapi": "3.1.0",
+        "info": INFO,
         "paths": {
             "/data": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "schema": {
@@ -558,11 +565,13 @@ def test_array_without_items(backend: str) -> None:
     """Array schema without items returns empty array."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/items": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "schema": {"type": "array"},
@@ -591,11 +600,13 @@ def test_post_path(backend: str) -> None:
     """A POST path is mocked (both backends)."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "post": {
                     "responses": {
                         "201": {
+                            "description": "Created",
                             "content": {
                                 "application/json": {
                                     "example": {"id": 1, "name": "Fluffy"}
@@ -638,19 +649,21 @@ def test_mutating_path(
     """PUT, DELETE, and PATCH paths are mocked (both backends)."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets/1": {
-                method.value.lower(): {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "example": example,
+                    method.value.lower(): {
+                        "responses": {
+                            "200": {
+                                "description": "OK",
+                                "content": {
+                                    "application/json": {
+                                        "example": example,
+                                    },
                                 },
                             },
                         },
                     },
-                },
             },
         },
     }
@@ -671,11 +684,13 @@ def test_prefers_201_response(backend: str) -> None:
     """201 is used when 200 is not available."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "post": {
                     "responses": {
                         "201": {
+                            "description": "Created",
                             "content": {
                                 "application/json": {
                                     "example": {"id": 42},
@@ -704,11 +719,13 @@ def test_query_params(backend: str) -> None:
     """URLs with query strings (e.g. ?limit=10) are matched."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "schema": {"type": "array"},
@@ -737,6 +754,7 @@ def test_prefers_first_2xx_when_no_200_or_201(backend: str) -> None:
     """First 2xx status is used when 200/201 not present."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
@@ -773,8 +791,6 @@ def test_prefers_first_2xx_when_no_200_or_201(backend: str) -> None:
     argvalues=[
         pytest.param({}, id="empty_content"),
         pytest.param({"schema": {}}, id="unknown_schema_type"),
-        pytest.param({"schema": True}, id="non_dict_schema"),
-        pytest.param("invalid", id="non_dict_json_content"),
     ],
 )
 def test_missing_or_invalid_content_returns_empty(
@@ -783,11 +799,13 @@ def test_missing_or_invalid_content_returns_empty(
     """Missing or invalid application/json content returns 200 with empty body."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": json_content,
                             },
@@ -810,76 +828,11 @@ def test_missing_or_invalid_content_returns_empty(
 
 
 @_BACKEND
-def test_object_skips_non_dict_property_schema(backend: str) -> None:
-    """Object properties with non-dict schema are skipped."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/data": {
-                "get": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "valid": {"type": "string"},
-                                            "invalid": "not a schema",
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }
-    resp = _run(
-        backend=backend,
-        spec=spec,
-        url=f"{BASE_URL}/data",
-        base_url=BASE_URL,
-        method=HTTPMethod.GET,
-        params=None,
-    )
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {"valid": ""}
-
-
-@_BACKEND
-def test_response_not_dict_returns_empty(backend: str) -> None:
-    """When response value is not a dict, returns empty body."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/pets": {
-                "get": {
-                    "responses": {
-                        "200": "invalid",
-                    },
-                },
-            },
-        },
-    }
-    resp = _run(
-        backend=backend,
-        spec=spec,
-        url=f"{BASE_URL}/pets",
-        base_url=BASE_URL,
-        method=HTTPMethod.GET,
-        params=None,
-    )
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {}
-
-
-@_BACKEND
 def test_non_standard_status_code_returns_int(backend: str) -> None:
     """Non-standard status codes (e.g. 522) fall back to int."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
@@ -914,6 +867,7 @@ def test_default_response_key_when_no_2xx(backend: str) -> None:
     """Uses default response (mapped to 200) when only default exists."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
@@ -948,11 +902,13 @@ def test_first_response_when_no_2xx(backend: str) -> None:
     """Uses first response when no 2xx status exists."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/pets": {
                 "get": {
                     "responses": {
                         "404": {
+                            "description": "Not found",
                             "content": {
                                 "application/json": {
                                     "example": {"error": "Not found"},
@@ -977,45 +933,17 @@ def test_first_response_when_no_2xx(backend: str) -> None:
 
 
 @_BACKEND
-def test_skips_invalid(backend: str) -> None:
-    """Skips non-dict path items and non-HTTP methods."""
-    spec = {
-        "openapi": "3.0.0",
-        "paths": {
-            "/valid": {
-                "get": {"responses": {"200": {"description": "OK"}}},
-            },
-            "/invalid-path": "not a dict",
-            "/params": {
-                "parameters": [],
-            },
-            "/bad-op": {
-                "get": "invalid",
-            },
-        },
-    }
-    resp = _run(
-        backend=backend,
-        spec=spec,
-        url=f"{BASE_URL}/valid",
-        base_url=BASE_URL,
-        method=HTTPMethod.GET,
-        params=None,
-    )
-    assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {}
-
-
-@_BACKEND
 def test_nested_schema_generation(backend: str) -> None:
     """Nested objects and arrays are generated from schema."""
     spec = {
         "openapi": "3.0.0",
+        "info": INFO,
         "paths": {
             "/users": {
                 "get": {
                     "responses": {
                         "200": {
+                            "description": "OK",
                             "content": {
                                 "application/json": {
                                     "schema": {
@@ -1089,25 +1017,28 @@ def test_openapi_core_validates_compliant_spec(backend: str) -> None:
 
 
 @_BACKEND
-@pytest.mark.parametrize(
-    argnames="info",
-    argvalues=[
-        pytest.param({"title": "API"}, id="missing_version"),
-        pytest.param({"version": "1.0.0"}, id="missing_title"),
-    ],
-)
-def test_normalize_spec_adds_missing_info_fields(
-    backend: str, info: dict[str, Any]
-) -> None:
-    """Spec with info missing title or version is normalized for validation."""
+def test_schema_type_null_openapi_31(backend: str) -> None:
+    """OpenAPI 3.1: type 'null' generates None."""
     spec = {
-        "openapi": "3.0.0",
-        "info": info,
+        "openapi": "3.1.0",
+        "info": INFO,
         "paths": {
-            "/health": {
+            "/data": {
                 "get": {
                     "responses": {
-                        "200": {"description": "OK", "content": {"application/json": {"example": {"ok": True}}}},
+                        "200": {
+                            "description": "OK",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {"type": "null"},
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },
@@ -1116,29 +1047,88 @@ def test_normalize_spec_adds_missing_info_fields(
     resp = _run(
         backend=backend,
         spec=spec,
-        url=f"{BASE_URL}/health",
+        url=f"{BASE_URL}/data",
         base_url=BASE_URL,
         method=HTTPMethod.GET,
         params=None,
     )
     assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {"ok": True}
+    assert resp.json() == {"value": None}
 
 
 @_BACKEND
-def test_validate_spec_false_skips_validation(backend: str) -> None:
-    """When validate_spec=False, openapi-core validation is skipped."""
+def test_skips_non_http_methods(backend: str) -> None:
+    """Path items with parameters/summary etc. are skipped; only HTTP methods are mocked."""
     spec = {
-        "paths": {"/skip": {"get": {"responses": {"200": {"description": "OK"}}}}},
+        "openapi": "3.0.0",
+        "info": INFO,
+        "paths": {
+            "/pets": {
+                "parameters": [{"name": "limit", "in": "query", "schema": {"type": "integer"}}],
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "content": {"application/json": {"example": {"pets": []}}},
+                        },
+                    },
+                },
+            },
+        },
     }
     resp = _run(
         backend=backend,
         spec=spec,
-        url=f"{BASE_URL}/skip",
+        url=f"{BASE_URL}/pets",
         base_url=BASE_URL,
         method=HTTPMethod.GET,
         params=None,
-        validate_spec=False,
     )
     assert resp.status_code == HTTPStatus.OK
-    assert resp.json() == {}
+    assert resp.json() == {"pets": []}
+
+
+@_BACKEND
+def test_schema_ref_resolution(backend: str) -> None:
+    """$ref in schemas is resolved via openapi-core for mock generation."""
+    spec = {
+        "openapi": "3.0.0",
+        "info": INFO,
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "description": "List of pets",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/Pet"},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"},
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 0, "name": ""}

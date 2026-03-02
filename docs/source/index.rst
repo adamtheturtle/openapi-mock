@@ -26,6 +26,7 @@ Usage
 
    spec = {
        "openapi": "3.0.0",
+       "info": {"title": "API", "version": "1.0.0"},
        "paths": {"/pets": {"get": {"responses": {"200": {"description": "OK"}}}}},
    }
    with respx.mock(base_url="https://api.example.com", assert_all_called=False) as m:
