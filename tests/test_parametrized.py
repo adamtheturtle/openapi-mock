@@ -52,13 +52,16 @@ def _run_responses(
 
 
 @beartype
-def _run(*, backend: str, **kwargs: Any) -> _Response:
+def _run(
+    *,
+    backend: str,
+    spec: dict[str, Any],
+    url: str,
+    base_url: str,
+    method: HTTPMethod = HTTPMethod.GET,
+    params: dict[str, Any] | None = None,
+) -> _Response:
     """Run a request against the given backend."""
-    spec = kwargs["spec"]
-    url = kwargs["url"]
-    base_url = kwargs["base_url"]
-    method = kwargs.get("method", HTTPMethod.GET)
-    params = kwargs.get("params")
     if backend == "respx":
         return _run_respx(
             spec=spec, url=url, base_url=base_url, method=method, params=params
