@@ -41,7 +41,9 @@ def test_unsupported_format_raises(tmp_path: Path) -> None:
         load_spec(path=path)
 
 
-@pytest.mark.parametrize(argnames="content", argvalues=["", "null"], ids=["empty", "null"])
+@pytest.mark.parametrize(
+    argnames="content", argvalues=["", "null"], ids=["empty", "null"]
+)
 def test_invalid_yaml_raises(tmp_path: Path, content: str) -> None:
     """Empty or null YAML files raise ValueError."""
     path = tmp_path / "spec.yaml"
