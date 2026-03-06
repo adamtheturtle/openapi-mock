@@ -81,10 +81,10 @@ lint.unfixable = [ "ERA001" ]
 lint.mccabe.max-complexity = 12
 
 [tool.pylint]
-"MASTER".load-plugins = [ "pylint_per_file_ignores" ]
-"MASTER".jobs = 0
-"MESSAGES CONTROL".enable = [ "spelling" ]
-"MESSAGES CONTROL".disable = [
+MASTER.load-plugins = [ "pylint_per_file_ignores" ]
+MASTER.jobs = 0
+MESSAGES-CONTROL.enable = [ "spelling" ]
+MESSAGES-CONTROL.disable = [
     "line-too-long",
     "unused-import",
     "ungrouped-imports",
@@ -97,15 +97,15 @@ lint.mccabe.max-complexity = 12
     "import-outside-toplevel",
     "reimported",
 ]
-"MESSAGES CONTROL".per-file-ignores = [
+MESSAGES-CONTROL.per-file-ignores = [
     "docs/source/conf.py:invalid-name",
     "docs/source/doccmd_*.py:missing-module-docstring,invalid-name",
     "doccmd_README_rst_*.py:missing-module-docstring,invalid-name",
     "tests/test_parametrized.py:too-many-lines,too-many-arguments",
 ]
-"SPELLING".spelling-dict = "en_US"
-"SPELLING".spelling-private-dict-file = "spelling_private_dict.txt"
-"SPELLING".spelling-store-unknown-words = "no"
+SPELLING.spelling-dict = "en_US"
+SPELLING.spelling-private-dict-file = "spelling_private_dict.txt"
+SPELLING.spelling-store-unknown-words = "no"
 
 [tool.check-manifest]
 ignore = [
