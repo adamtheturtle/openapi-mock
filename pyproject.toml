@@ -111,6 +111,7 @@ SPELLING.spelling-store-unknown-words = "no"
 ignore = [
     "*.pyc",
     "__pycache__",
+    "zizmor.yml",
     "__pycache__/**",
     ".editorconfig",
     ".prettierrc",
