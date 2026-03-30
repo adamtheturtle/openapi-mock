@@ -195,6 +195,26 @@ ignore_names = [
     "add_openapi_to_responses",
     "base_url",
     "request",
+    # pytest configuration
+    "pytest_collect_file",
+    "pytest_collection_modifyitems",
+    # Sphinx
+    "copybutton_exclude",
+    "extensions",
+    "html_show_copyright",
+    "html_show_sourcelink",
+    "html_show_sphinx",
+    "html_theme",
+    "html_theme_options",
+    "html_title",
+    "htmlhelp_basename",
+    "intersphinx_mapping",
+    "nitpick_ignore",
+    "nitpicky",
+    "project_copyright",
+    "rst_prolog",
+    "spelling_word_list_filename",
+    "templates_path",
 ]
 exclude = [ ".venv" ]
 
