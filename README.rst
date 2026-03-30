@@ -31,6 +31,8 @@ With respx (httpx)
 
 .. code-block:: python
 
+   """Example usage with respx."""
+
    from http import HTTPStatus
 
    import httpx
@@ -51,6 +53,8 @@ With responses (requests)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
+
+   """Example usage with responses."""
 
    from http import HTTPStatus
 
