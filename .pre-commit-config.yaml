@@ -4,23 +4,38 @@ fail_fast: true
 ci:
   skip:
     - actionlint
+    - check-manifest
+    - deptry
+    - doc8
+    - interrogate
+    - interrogate-docs
+    - mypy
+    - mypy-docs
+    - pydocstringformatter
+    - pylint
+    - pylint-docs
+    - pyproject-fmt
+    - pyrefly
+    - pyrefly-docs
+    - pyright
+    - pyright-docs
+    - pyright-verifytypes
+    - pyroma
+    - ruff-check-fix
+    - ruff-check-fix-docs
+    - ruff-format-fix
+    - ruff-format-fix-docs
     - shellcheck
     - shellcheck-docs
     - shfmt
     - shfmt-docs
-    - pylint
-    - pylint-docs
-    - pyright-verifytypes
-    - pyright-docs
-    - mypy
-    - mypy-docs
+    - sphinx-lint
     - ty
     - ty-docs
-    - pyrefly
-    - pyrefly-docs
-    - check-manifest
-    - deptry
-    - pyproject-fmt
+    - vulture
+    - vulture-docs
+    - yamlfix
+    - zizmor
 
 default_install_hook_types: [pre-commit, pre-push]
 
@@ -54,6 +69,9 @@ repos:
         stages: [pre-commit]
       - id: end-of-file-fixer
         stages: [pre-commit]
+      - id: file-contents-sorter
+        files: spelling_private_dict\.txt$
+        stages: [pre-commit]
       - id: trailing-whitespace
         stages: [pre-commit]
   - repo: https://github.com/pre-commit/pygrep-hooks
@@ -67,20 +85,6 @@ repos:
         stages: [pre-commit]
       - id: rst-backticks
         stages: [pre-commit]
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
-    hooks:
-      - id: ruff
-        args: [--fix]
-        stages: [pre-commit]
-      - id: ruff-format
-        stages: [pre-commit]
-  - repo: https://github.com/regebro/pyroma
-    rev: 5.0.1
-    hooks:
-      - id: pyroma
-        args: [--min=10, .]
-        stages: [pre-commit]
   - repo: local
     hooks:
       - id: actionlint
@@ -89,6 +93,14 @@ repos:
         language: python
         pass_filenames: false
         types_or: [yaml]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: pydocstringformatter
+        name: pydocstringformatter
+        entry: uv run --extra=dev pydocstringformatter
+        language: python
+        types_or: [python]
         additional_dependencies: [uv==0.9.5]
         stages: [pre-commit]
 
@@ -126,61 +138,74 @@ repos:
         additional_dependencies: [uv==0.9.5]
         stages: [pre-commit]
 
-      - id: doc8
-        name: doc8
-        entry: uv run --extra=dev doc8 docs/source/
+      - id: mypy
+        name: mypy
+        stages: [pre-push]
+        entry: uv run --extra=dev -m mypy
         language: python
+        types_or: [python, toml]
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
-        stages: [pre-commit]
 
-      - id: interrogate
-        name: interrogate
-        entry: uv run --extra=dev interrogate -v src/ tests/
+      # We do not use --example-workers 0 due to https://github.com/python/mypy/issues/18283
+      - id: mypy-docs
+        name: mypy-docs
+        stages: [pre-push]
+        entry: uv run --extra=dev doccmd --no-write-to-file --language=python --command="mypy"
         language: python
-        pass_filenames: false
+        types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
-        stages: [pre-commit]
-
-      - id: pydocstringformatter
-        name: pydocstringformatter
-        entry: uv run --extra=dev pydocstringformatter src/ tests/
-        language: python
-        pass_filenames: false
-        types: [python]
-        additional_dependencies: [uv==0.9.5]
-        stages: [pre-commit]
-
-      - id: vulture
-        name: vulture
-        entry: uv run --extra=dev vulture src/
-        language: python
-        pass_filenames: false
-        additional_dependencies: [uv==0.9.5]
-        stages: [pre-commit]
-
-      - id: yamlfix
-        name: yamlfix
-        entry: uv run --extra=dev yamlfix
-        language: python
-        types: [yaml]
-        additional_dependencies: [uv==0.9.5]
-        stages: [pre-commit]
-
-      - id: pyproject-fmt
-        name: pyproject-fmt
-        entry: uv run --extra=dev pyproject-fmt
-        language: python
-        types_or: [toml]
-        files: pyproject.toml
-        additional_dependencies: [uv==0.9.5]
-        stages: [pre-commit]
 
       - id: check-manifest
         name: check-manifest
+        stages: [pre-push]
         entry: uv run --extra=dev -m check_manifest
         language: python
         pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pyright
+        name: pyright
+        stages: [pre-push]
+        entry: uv run --extra=dev -m pyright .
+        language: python
+        types_or: [python, toml]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pyright-docs
+        name: pyright-docs
+        stages: [pre-push]
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="pyright"
+        language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+
+      - id: vulture
+        name: vulture
+        entry: uv run --extra=dev -m vulture .
+        language: python
+        types_or: [python]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: vulture-docs
+        name: vulture docs
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="vulture"
+        language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: pyroma
+        name: pyroma
+        entry: uv run --extra=dev -m pyroma --min 10 .
+        language: python
+        pass_filenames: false
+        types_or: [toml]
         additional_dependencies: [uv==0.9.5]
         stages: [pre-commit]
 
@@ -191,23 +216,6 @@ repos:
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
         stages: [pre-commit]
-
-      - id: pyright-verifytypes
-        name: pyright verifytypes
-        entry: uv run --extra=dev -m pyright --ignoreexternal --verifytypes openapi_mock
-        language: python
-        pass_filenames: false
-        additional_dependencies: [uv==0.9.5]
-        stages: [pre-push]
-
-      - id: pyright-docs
-        name: pyright-docs
-        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
-          --command="pyright"
-        language: python
-        types_or: [markdown, rst]
-        additional_dependencies: [uv==0.9.5]
-        stages: [pre-push]
 
       - id: pylint
         name: pylint
@@ -226,59 +234,72 @@ repos:
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
 
-      - id: mypy
-        name: mypy
-        entry: uv run --extra=dev -m mypy .
+      - id: ruff-check-fix
+        name: Ruff check fix
+        entry: uv run --extra=dev -m ruff check --fix
         language: python
-        types_or: [python, toml]
-        pass_filenames: false
+        types_or: [python]
         additional_dependencies: [uv==0.9.5]
-        stages: [pre-push]
+        stages: [pre-commit]
 
-      # We do not use --example-workers 0 due to https://github.com/python/mypy/issues/18283
-      - id: mypy-docs
-        name: mypy-docs
-        entry: uv run --extra=dev doccmd --no-write-to-file --language=python --command="mypy"
+      - id: ruff-check-fix-docs
+        name: Ruff check fix docs
+        entry: uv run --extra=dev doccmd --language=python --command="ruff check --fix"
         language: python
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
-        stages: [pre-push]
+        stages: [pre-commit]
 
-      - id: ty
-        name: ty
-        entry: uv run --extra=dev ty check
+      - id: ruff-format-fix
+        name: Ruff format
+        entry: uv run --extra=dev -m ruff format
         language: python
-        types_or: [python, toml]
-        pass_filenames: false
+        types_or: [python]
         additional_dependencies: [uv==0.9.5]
-        stages: [pre-push]
+        stages: [pre-commit]
 
-      - id: ty-docs
-        name: ty-docs
+      - id: ruff-format-fix-docs
+        name: Ruff format docs
+        entry: uv run --extra=dev doccmd --language=python --no-pad-file --command="ruff
+          format"
+        language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: doc8
+        name: doc8
+        entry: uv run --extra=dev -m doc8
+        language: python
+        types_or: [rst]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: interrogate
+        name: interrogate
+        entry: uv run --extra=dev -m interrogate
+        language: python
+        types_or: [python]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: interrogate-docs
+        name: interrogate docs
         entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
-          --command="ty check"
+          --command="interrogate"
         language: python
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
-        stages: [pre-push]
+        stages: [pre-commit]
 
-      - id: pyrefly
-        name: pyrefly
-        entry: uv run --extra=dev pyrefly check
+      - id: pyproject-fmt
+        name: pyproject-fmt
+        entry: uv run --extra=dev pyproject-fmt
         language: python
-        types_or: [python, toml]
-        pass_filenames: false
+        types_or: [toml]
+        files: pyproject.toml
         additional_dependencies: [uv==0.9.5]
-        stages: [pre-push]
-
-      - id: pyrefly-docs
-        name: pyrefly-docs
-        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
-          --command="pyrefly check"
-        language: python
-        types_or: [markdown, rst]
-        additional_dependencies: [uv==0.9.5]
-        stages: [pre-push]
+        stages: [pre-commit]
 
       - id: linkcheck
         name: linkcheck
@@ -304,7 +325,76 @@ repos:
         name: Build Documentation
         entry: uv run --extra=dev sphinx-build -M html docs/source docs/build -W
         language: python
-        types_or: [rst]
         stages: [manual]
         pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pyright-verifytypes
+        name: pyright-verifytypes
+        stages: [pre-push]
+        entry: uv run --extra=dev -m pyright --ignoreexternal --verifytypes openapi_mock
+        language: python
+        pass_filenames: false
+        types_or: [python]
+        additional_dependencies: [uv==0.9.5]
+
+      - id: ty
+        name: ty
+        stages: [pre-push]
+        entry: uv run --extra=dev ty check
+        language: python
+        types_or: [python, toml]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: ty-docs
+        name: ty-docs
+        stages: [pre-push]
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="ty check"
+        language: python
+        types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
+
+      - id: yamlfix
+        name: yamlfix
+        entry: uv run --extra=dev yamlfix
+        language: python
+        types_or: [yaml]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: zizmor
+        name: zizmor
+        entry: uv run --extra=dev zizmor --strict-collection .github
+        language: python
+        pass_filenames: false
+        types_or: [yaml]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: sphinx-lint
+        name: sphinx-lint
+        entry: uv run --extra=dev sphinx-lint --enable=all --disable=line-too-long
+        language: python
+        types_or: [rst]
+        additional_dependencies: [uv==0.9.5]
+        stages: [pre-commit]
+
+      - id: pyrefly
+        name: pyrefly
+        stages: [pre-push]
+        entry: uv run --extra=dev pyrefly check
+        language: python
+        types_or: [python, toml]
+        pass_filenames: false
+        additional_dependencies: [uv==0.9.5]
+
+      - id: pyrefly-docs
+        name: pyrefly-docs
+        stages: [pre-push]
+        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
+          --command="pyrefly check"
+        language: python
+        types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]
