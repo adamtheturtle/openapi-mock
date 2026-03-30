@@ -47,7 +47,7 @@ optional-dependencies.dev = [
     "pyroma==5.0.1",
     "pytest==9.0.2",
     "pytest-cov==7.1.0",
-    "ruff==0.15.7",
+    "ruff==0.15.8",
     "shellcheck-py==0.11.0.1",
     "shfmt-py==3.12.0.2",
     "sphinx==9.1.0",
@@ -57,7 +57,7 @@ optional-dependencies.dev = [
     "sphinx-substitution-extensions==2026.1.12",
     "sphinxcontrib-spelling==8.0.2",
     "sybil[pytest]==10.0.1",
-    "ty==0.0.25",
+    "ty==0.0.26",
     "types-requests>=2.32.0",
     "vulture==2.16",
     "yamlfix==1.19.1",
@@ -140,17 +140,6 @@ indent = 4
 keep_full_version = true
 max_supported_python = "3.14"
 
-[tool.pytest]
-ini_options.xfail_strict = true
-ini_options.log_cli = true
-
-[tool.coverage]
-run.branch = true
-run.source = [ "src/openapi_mock" ]
-report.exclude_also = [ "if TYPE_CHECKING:" ]
-report.fail_under = 100
-report.show_missing = true
-
 [tool.mypy]
 strict = true
 files = [ "." ]
@@ -169,6 +158,17 @@ typeCheckingMode = "strict"
 [tool.ty]
 analysis.respect-type-ignore-comments = false
 terminal.error-on-warning = true
+
+[tool.pytest]
+ini_options.xfail_strict = true
+ini_options.log_cli = true
+
+[tool.coverage]
+run.branch = true
+run.source = [ "src/openapi_mock" ]
+report.exclude_also = [ "if TYPE_CHECKING:" ]
+report.fail_under = 100
+report.show_missing = true
 
 [tool.pydocstringformatter]
 write = true
