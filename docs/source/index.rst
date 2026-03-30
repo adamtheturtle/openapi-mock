@@ -17,6 +17,8 @@ Usage
 
 .. code-block:: python
 
+   """Example usage."""
+
    from http import HTTPStatus
 
    import httpx

@@ -90,7 +90,7 @@ _BACKEND = pytest.mark.parametrize(
 @_BACKEND
 def test_empty_responses_returns_200_empty(backend: str) -> None:
     """Operation with empty responses returns 200 and empty body."""
-    spec = {
+    spec: dict[str, Any] = {
         "openapi": "3.0.0",
         "paths": {"/pets": {"get": {"responses": {}}}},
     }
@@ -952,7 +952,7 @@ def test_first_response_when_no_2xx(backend: str) -> None:
 @_BACKEND
 def test_skips_invalid(backend: str) -> None:
     """Skips non-dict path items and non-HTTP methods."""
-    spec = {
+    spec: dict[str, Any] = {
         "openapi": "3.0.0",
         "paths": {
             "/valid": {

@@ -2,7 +2,7 @@ Contributing
 ============
 
 Development setup
-----------------
+-----------------
 
 .. code-block:: console
 
