@@ -17,6 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        python-version: ['3.12', '3.13', '3.14']
         hook-stage: [pre-commit, pre-push, manual]
 
     runs-on: ubuntu-latest
@@ -37,6 +38,8 @@ jobs:
         shell: bash
         run: uv run --extra=dev prek run --all-files --hook-stage ${{ matrix.hook-stage }}
           --verbose
+        env:
+          UV_PYTHON: ${{ matrix.python-version }}
 
   pre-commit-ci-lite:
     needs: lint
