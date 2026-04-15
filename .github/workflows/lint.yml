@@ -1,4 +1,5 @@
 ---
+# Test: verify pre-commit.ci lite reports on PRs
 name: Lint
 
 on:
