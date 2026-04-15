@@ -42,6 +42,8 @@ jobs:
           UV_PYTHON: ${{ matrix.python-version }}
 
   pre-commit-ci-lite:
+    permissions:
+      statuses: write
     needs: lint
     runs-on: ubuntu-latest
     if: always() && (needs.lint.result == 'success' || needs.lint.result == 'failure')
