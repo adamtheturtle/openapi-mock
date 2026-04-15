@@ -65,7 +65,7 @@ def _preprocess_content(*, content: dict[str, Any]) -> dict[str, Any]:
         match media_copy.get("schema"):
             case dict() as schema:
                 media_copy["schema"] = _preprocess_schema(
-                    schema=schema,
+                    schema=cast(dict[str, Any], schema),
                 )
             case None:
                 pass
