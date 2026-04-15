@@ -62,15 +62,17 @@ def _preprocess_content(*, content: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(media_type_val, dict):
             continue
         media_copy: dict[str, Any] = dict(cast(dict[str, Any], media_type_val))
-        schema = media_copy.get("schema")
-        if isinstance(schema, dict):
-            media_copy["schema"] = _preprocess_schema(
-                schema=cast(dict[str, Any], schema),
-            )
-        elif schema is not None:
-            # Boolean schemas (True/False) and other non-dict values are
-            # not supported by openapi-pydantic. Remove them.
-            media_copy.pop("schema", None)
+        match media_copy.get("schema"):
+            case dict() as schema:
+                media_copy["schema"] = _preprocess_schema(
+                    schema=schema,
+                )
+            case None:
+                pass
+            case _:
+                # Boolean schemas (True/False) and other non-dict values are
+                # not supported by openapi-pydantic. Remove them.
+                media_copy.pop("schema", None)
         result[media_type_key] = media_copy
     return result
 
@@ -166,15 +168,17 @@ def _resolve_schema_ref(
 
     Returns None if unresolvable.
     """
-    if not isinstance(ref_or_obj, Reference):
-        return ref_or_obj
-    if components is None or components.schemas is None:
-        return None
-    prefix = "#/components/schemas/"
-    if not ref_or_obj.ref.startswith(prefix):
-        return None
-    name = ref_or_obj.ref[len(prefix) :]
-    return components.schemas.get(name)
+    match ref_or_obj:
+        case Reference():
+            if components is None or components.schemas is None:
+                return None
+            prefix = "#/components/schemas/"
+            if not ref_or_obj.ref.startswith(prefix):
+                return None
+            name = ref_or_obj.ref[len(prefix) :]
+            return components.schemas.get(name)
+        case schema:
+            return schema
 
 
 @beartype
@@ -187,18 +191,20 @@ def _resolve_response_ref(
 
     Returns None if unresolvable.
     """
-    if not isinstance(ref_or_obj, Reference):
-        return ref_or_obj
-    if components is None or components.responses is None:
-        return None
-    prefix = "#/components/responses/"
-    if not ref_or_obj.ref.startswith(prefix):
-        return None
-    name = ref_or_obj.ref[len(prefix) :]
-    target = components.responses.get(name)
-    if isinstance(target, Reference):
-        return None
-    return target
+    match ref_or_obj:
+        case Reference():
+            if components is None or components.responses is None:
+                return None
+            prefix = "#/components/responses/"
+            if not ref_or_obj.ref.startswith(prefix):
+                return None
+            name = ref_or_obj.ref[len(prefix) :]
+            target = components.responses.get(name)
+            if isinstance(target, Reference):
+                return None
+            return target
+        case response:
+            return response
 
 
 @beartype
@@ -211,18 +217,20 @@ def _resolve_example_ref(
 
     Returns None if unresolvable.
     """
-    if not isinstance(ref_or_obj, Reference):
-        return ref_or_obj
-    if components is None or components.examples is None:
-        return None
-    prefix = "#/components/examples/"
-    if not ref_or_obj.ref.startswith(prefix):
-        return None
-    name = ref_or_obj.ref[len(prefix) :]
-    target = components.examples.get(name)
-    if isinstance(target, Reference):
-        return None
-    return target
+    match ref_or_obj:
+        case Reference():
+            if components is None or components.examples is None:
+                return None
+            prefix = "#/components/examples/"
+            if not ref_or_obj.ref.startswith(prefix):
+                return None
+            name = ref_or_obj.ref[len(prefix) :]
+            target = components.examples.get(name)
+            if isinstance(target, Reference):
+                return None
+            return target
+        case example:
+            return example
 
 
 @beartype
