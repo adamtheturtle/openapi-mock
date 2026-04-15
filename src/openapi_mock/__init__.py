@@ -62,17 +62,14 @@ def _preprocess_content(*, content: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(media_type_val, dict):
             continue
         media_copy: dict[str, Any] = dict(cast(dict[str, Any], media_type_val))
-        match media_copy.get("schema"):
-            case dict() as schema:
-                media_copy["schema"] = _preprocess_schema(
-                    schema=cast(dict[str, Any], schema),
-                )
-            case None:
-                pass
-            case _:
-                # Boolean schemas (True/False) and other non-dict values are
-                # not supported by openapi-pydantic. Remove them.
-                media_copy.pop("schema", None)
+        if isinstance(media_copy.get("schema"), dict):
+            media_copy["schema"] = _preprocess_schema(
+                schema=media_copy["schema"],
+            )
+        elif media_copy.get("schema") is not None:
+            # Boolean schemas (True/False) and other non-dict values are
+            # not supported by openapi-pydantic. Remove them.
+            media_copy.pop("schema", None)
         result[media_type_key] = media_copy
     return result
 
