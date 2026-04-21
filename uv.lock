@@ -988,7 +988,7 @@ requires-dist = [
     { name = "pyright", marker = "extra == 'dev'", specifier = "==1.1.408" },
     { name = "pyroma", marker = "extra == 'dev'", specifier = "==5.0.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.3" },
-    { name = "pytest-beartype-tests", marker = "extra == 'dev'", git = "https://github.com/adamtheturtle/pytest-beartype-tests.git?rev=bc81d99" },
+    { name = "pytest-beartype-tests", marker = "extra == 'dev'", specifier = "==2026.4.20" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==7.1.0" },
     { name = "responses", specifier = ">=0.25.3" },
     { name = "respx", specifier = ">=0.22.0" },
@@ -1399,11 +1399,15 @@ wheels = [
 
 [[package]]
 name = "pytest-beartype-tests"
-version = "2026.4.19.1.post5+gbc81d99a1"
-source = { git = "https://github.com/adamtheturtle/pytest-beartype-tests.git?rev=bc81d99#bc81d99a1041e4d24bd67a2eec077b6d6616e712" }
+version = "2026.4.20"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6a/0e/f3b3980efe46c7655ce2820fe56189490f9c1e6ed5cb42b35999b4ba8238/pytest_beartype_tests-2026.4.20.tar.gz", hash = "sha256:73b10d64c5605809444469250c3ccc8b4ddbf788772be84f0ee0ac3f58460ccf", size = 85989, upload-time = "2026-04-20T06:28:22.773Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/42/ee5023bf416be8ffc276a08e42eac10aee1903142a1e25ceea24cc766b73/pytest_beartype_tests-2026.4.20-py3-none-any.whl", hash = "sha256:e61e7bd87443f92c89f125cc8a7284665c5137e953ecd91031be1620ba07c1d8", size = 5215, upload-time = "2026-04-20T06:28:21.166Z" },
 ]
 
 [[package]]
