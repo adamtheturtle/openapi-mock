@@ -27,8 +27,7 @@ dependencies = [
     "responses>=0.25.3",
     "respx>=0.22.0",
 ]
-optional-dependencies.dev = [
-    "actionlint-py==1.7.12.24",
+optional-dependencies.dev = [    "actionlint-py==1.7.12.24",
     "check-manifest==0.51",
     "deptry==0.25.1",
     "doc8==2.0.0",
@@ -57,8 +56,8 @@ optional-dependencies.dev = [
     "sphinx-pyproject==0.3.0",
     "sphinx-substitution-extensions==2026.1.12",
     "sphinxcontrib-spelling==8.0.2",
-    "sybil[pytest]==10.0.1",
     "strict-kwargs==2026.5.18",
+    "sybil[pytest]==10.0.1",
     "ty==0.0.36",
     "types-requests>=2.32.0",
     "vulture==2.16",
