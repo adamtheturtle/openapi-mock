@@ -1009,6 +1009,7 @@ dev = [
 ]
 release = [
     { name = "check-wheel-contents" },
+    { name = "towncrier" },
 ]
 
 [package.metadata]
@@ -1053,6 +1054,7 @@ requires-dist = [
     { name = "strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.5.19.post3" },
     { name = "sybil", extras = ["pytest"], marker = "extra == 'dev'", specifier = "==10.0.1" },
     { name = "towncrier", marker = "extra == 'dev'", specifier = "==25.8.0" },
+    { name = "towncrier", marker = "extra == 'release'", specifier = "==25.8.0" },
     { name = "ty", marker = "extra == 'dev'", specifier = "==0.0.37" },
     { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.0" },
     { name = "vulture", marker = "extra == 'dev'", specifier = "==2.16" },
