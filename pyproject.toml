@@ -84,10 +84,8 @@ target-version = "py312"
 line-length = 88
 lint.extend-select = [ "C901", "ERA001" ]
 lint.unfixable = [ "ERA001" ]
-lint.mccabe.max-complexity = 12
-
-
 lint.flake8-tidy-imports.banned-api."typing.cast".msg = "typing.cast is banned: use explicit type narrowing or a typed variable instead."
+lint.mccabe.max-complexity = 12
 
 [tool.pylint]
 MASTER.load-plugins = [
