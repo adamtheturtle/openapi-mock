@@ -450,7 +450,7 @@ wheels = [
 
 [[package]]
 name = "doccmd"
-version = "2026.5.16"
+version = "2026.5.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
@@ -463,9 +463,9 @@ dependencies = [
     { name = "sybil" },
     { name = "sybil-extras" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/15/e5/567d5a5cf549de53b66b296a4330c7b3728790e37942a5e1adb171d4c12d/doccmd-2026.5.16.tar.gz", hash = "sha256:85a9fc3f8b016a7818f0d05e93900f1c44ebfef418cd559f2aec3e0437925615", size = 191828, upload-time = "2026-05-16T07:58:44.057Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/72/cc62f14a3dc6f1151f9ac64e657dc36674e6d297be630775f6b51ffcfe47/doccmd-2026.5.19.tar.gz", hash = "sha256:3ba7f324fa329744109677737814233b9fde666e25929f24bf321a582162f2e7", size = 192425, upload-time = "2026-05-19T11:13:36.194Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/de/07e81c13e84a31e613ebe0b8a6c5ff3869d87d6da7a185cf92f78e83d69d/doccmd-2026.5.16-py2.py3-none-any.whl", hash = "sha256:a50018daf5d5ecd35691b417034c73413fd9908b64f9c36da9423876e88cb3ee", size = 22597, upload-time = "2026-05-16T07:58:42.074Z" },
+    { url = "https://files.pythonhosted.org/packages/65/40/49087a337292f0775d8327f339509044414ab4e0295aa2c47422633a1470/doccmd-2026.5.19-py2.py3-none-any.whl", hash = "sha256:6778d2cb16273b9d1c74a27c599970bb4bb9f3570d76ae6ddbc2ea33f3f80fb7", size = 22785, upload-time = "2026-05-19T11:13:33.952Z" },
 ]
 
 [[package]]
@@ -997,8 +997,10 @@ dev = [
     { name = "sphinx-pyproject" },
     { name = "sphinx-substitution-extensions" },
     { name = "sphinxcontrib-spelling" },
+    { name = "sphinxcontrib-towncrier" },
     { name = "strict-kwargs" },
     { name = "sybil", extra = ["pytest"] },
+    { name = "towncrier" },
     { name = "ty" },
     { name = "types-requests" },
     { name = "vulture" },
@@ -1017,7 +1019,7 @@ requires-dist = [
     { name = "check-wheel-contents", marker = "extra == 'release'", specifier = "==0.6.3" },
     { name = "deptry", marker = "extra == 'dev'", specifier = "==0.25.1" },
     { name = "doc8", marker = "extra == 'dev'", specifier = "==2.0.0" },
-    { name = "doccmd", marker = "extra == 'dev'", specifier = "==2026.5.16" },
+    { name = "doccmd", marker = "extra == 'dev'", specifier = "==2026.5.19" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
@@ -1047,8 +1049,10 @@ requires-dist = [
     { name = "sphinx-pyproject", marker = "extra == 'dev'", specifier = "==0.3.0" },
     { name = "sphinx-substitution-extensions", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "sphinxcontrib-spelling", marker = "extra == 'dev'", specifier = "==8.0.2" },
-    { name = "strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.5.19.post1" },
+    { name = "sphinxcontrib-towncrier", marker = "extra == 'dev'", specifier = "==0.5.0a0" },
+    { name = "strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.5.19.post3" },
     { name = "sybil", extras = ["pytest"], marker = "extra == 'dev'", specifier = "==10.0.1" },
+    { name = "towncrier", marker = "extra == 'dev'", specifier = "==25.8.0" },
     { name = "ty", marker = "extra == 'dev'", specifier = "==0.0.37" },
     { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.0" },
     { name = "vulture", marker = "extra == 'dev'", specifier = "==2.16" },
@@ -1970,6 +1974,19 @@ wheels = [
 ]
 
 [[package]]
+name = "sphinxcontrib-towncrier"
+version = "0.5.0a0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sphinx" },
+    { name = "towncrier" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/21/fe/72ed57093e28af10595c50839b183c5fdf0952482e9ef0ca6eb90eb85c5d/sphinxcontrib_towncrier-0.5.0a0.tar.gz", hash = "sha256:294e69df6e275e7a86df7ea6a927cc7c28c2c370a884cd5c45de6ec989858f27", size = 62453, upload-time = "2025-02-28T01:59:16.894Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ac/5c/f7e39f243636a5e1894f2f5a72579977bf3968922afdb75175ee45062066/sphinxcontrib_towncrier-0.5.0a0-py3-none-any.whl", hash = "sha256:11d130c3ad5e4649821d543c4ea7ab64bbe78df4d859ef94f4298e7845dc0f59", size = 12609, upload-time = "2025-02-28T01:59:15.178Z" },
+]
+
+[[package]]
 name = "stevedore"
 version = "5.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1980,15 +1997,15 @@ wheels = [
 
 [[package]]
 name = "strict-kwargs"
-version = "2026.5.19.post1"
+version = "2026.5.19.post3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ty" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7e/45/9d6b7b03e9b5513dae59182bab05543409468aea77841da8c403c61d9ceb/strict_kwargs-2026.5.19.post1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:35499102547c410418edd4da533f19c85f5cb1c6744c670975a6b4591e8b2bf8", size = 2191838, upload-time = "2026-05-19T11:01:16.418Z" },
-    { url = "https://files.pythonhosted.org/packages/e6/e1/edcaf1bb90ff778adb1e5613b05a7385f6a061bcd3b976718a82bc0f5fd5/strict_kwargs-2026.5.19.post1-py3-none-manylinux_2_39_x86_64.whl", hash = "sha256:cece04db61680b521d8c440f58d504e36151e2fcdba7128fbe47e9ebee8ab62b", size = 2298036, upload-time = "2026-05-19T11:01:19.372Z" },
-    { url = "https://files.pythonhosted.org/packages/6a/75/7c43d1d64d3e9e466be4b363b88feffd6bf8efcee94fb73f857e2c5f198d/strict_kwargs-2026.5.19.post1-py3-none-win_amd64.whl", hash = "sha256:f76888366373bfc68a4054b3950db62bbf5f6f0cc41105174075a1c2d5449a2f", size = 2082398, upload-time = "2026-05-19T11:01:21.467Z" },
+    { url = "https://files.pythonhosted.org/packages/23/b4/e51d972e18c777793fd6af12f8e2785521252f81967f5365a2e72e2dfc61/strict_kwargs-2026.5.19.post3-py3-none-macosx_11_0_arm64.whl", hash = "sha256:d778b7b77e7ba5a068d5a4f3bef0600be37ebebc26ae25c6355140e98103b98e", size = 2201496, upload-time = "2026-05-19T19:45:50.853Z" },
+    { url = "https://files.pythonhosted.org/packages/87/b4/09bdae71f1b1ee7a54245b67eb34cead80696e12ca6e4d83ca5d3f202ac5/strict_kwargs-2026.5.19.post3-py3-none-manylinux_2_39_x86_64.whl", hash = "sha256:133aa54e96ca3884465fef378919fcfb4bc00e94777251d6d3a5490ebef3d11a", size = 2307371, upload-time = "2026-05-19T19:45:52.579Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/3f/73c489d29d7fbffc09a371e258d1bb68afc15f43861b257ce4800888692b/strict_kwargs-2026.5.19.post3-py3-none-win_amd64.whl", hash = "sha256:dbbfb69d3be9070777cb1c5350f1a120df756e19ffe9cd2080c94ec715471459", size = 2089484, upload-time = "2026-05-19T19:45:54.54Z" },
 ]
 
 [[package]]
@@ -2090,6 +2107,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c3/af/14b24e41977adb296d6bd1fb59402cf7d60ce364f90c890bd2ec65c43b5a/tomlkit-0.14.0.tar.gz", hash = "sha256:cf00efca415dbd57575befb1f6634c4f42d2d87dbba376128adb42c121b87064", size = 187167, upload-time = "2026-01-13T01:14:53.304Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b5/11/87d6d29fb5d237229d67973a6c9e06e048f01cf4994dee194ab0ea841814/tomlkit-0.14.0-py3-none-any.whl", hash = "sha256:592064ed85b40fa213469f81ac584f67a4f2992509a7c3ea2d632208623a3680", size = 39310, upload-time = "2026-01-13T01:14:51.965Z" },
+]
+
+[[package]]
+name = "towncrier"
+version = "25.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "jinja2" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c2/eb/5bf25a34123698d3bbab39c5bc5375f8f8bcbcc5a136964ade66935b8b9d/towncrier-25.8.0.tar.gz", hash = "sha256:eef16d29f831ad57abb3ae32a0565739866219f1ebfbdd297d32894eb9940eb1", size = 76322, upload-time = "2025-08-30T11:41:55.393Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/42/06/8ba22ec32c74ac1be3baa26116e3c28bc0e76a5387476921d20b6fdade11/towncrier-25.8.0-py3-none-any.whl", hash = "sha256:b953d133d98f9aeae9084b56a3563fd2519dfc6ec33f61c9cd2c61ff243fb513", size = 65101, upload-time = "2025-08-30T11:41:53.644Z" },
 ]
 
 [[package]]
