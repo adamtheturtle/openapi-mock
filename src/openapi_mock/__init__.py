@@ -3,7 +3,7 @@
 import re
 from collections.abc import Iterator
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 
 import httpx
 import respx
@@ -42,15 +42,15 @@ def _preprocess_schema(*, schema: dict[str, Any]) -> dict[str, Any]:
     result = dict(schema)
     props = result.get("properties")
     if isinstance(props, dict):
-        typed_props = cast(dict[str, Any], props)
+        typed_props: dict[str, Any] = props
         result["properties"] = {
-            k: _preprocess_schema(schema=cast(dict[str, Any], v))
+            k: _preprocess_schema(schema=v)
             for k, v in typed_props.items()
             if isinstance(v, dict)
         }
     items = result.get("items")
     if isinstance(items, dict):
-        result["items"] = _preprocess_schema(schema=cast(dict[str, Any], items))
+        result["items"] = _preprocess_schema(schema=items)
     return result
 
 
@@ -61,7 +61,7 @@ def _preprocess_content(*, content: dict[str, Any]) -> dict[str, Any]:
     for media_type_key, media_type_val in content.items():
         if not isinstance(media_type_val, dict):
             continue
-        media_copy: dict[str, Any] = dict(cast(dict[str, Any], media_type_val))
+        media_copy: dict[str, Any] = dict(media_type_val)
         if isinstance(media_copy.get("schema"), dict):
             media_copy["schema"] = _preprocess_schema(
                 schema=media_copy["schema"],
@@ -85,13 +85,13 @@ def _preprocess_responses(
         str_key = f"{status_key}"
         if not isinstance(resp_val, dict):
             continue
-        resp_copy: dict[str, Any] = dict(cast(dict[str, Any], resp_val))
+        resp_copy: dict[str, Any] = dict(resp_val)
         if "description" not in resp_copy:
             resp_copy["description"] = ""
         content = resp_copy.get("content")
         if isinstance(content, dict):
             resp_copy["content"] = _preprocess_content(
-                content=cast(dict[str, Any], content),
+                content=content,
             )
         new_responses[str_key] = resp_copy
     return new_responses
@@ -117,22 +117,22 @@ def _preprocess_spec(*, spec: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(paths, dict):
         return result
 
-    typed_paths = cast(dict[str, Any], paths)
+    typed_paths: dict[str, Any] = paths
     new_paths: dict[str, Any] = {}
     for path_key, path_item in typed_paths.items():
         if not isinstance(path_item, dict):
             continue
-        typed_path_item = cast(dict[str, Any], path_item)
+        typed_path_item: dict[str, Any] = path_item
         new_path_item: dict[str, Any] = {}
         for method_key, value in typed_path_item.items():
             if method_key.lower() in _HTTP_METHODS:
                 if not isinstance(value, dict):
                     continue
-                op_copy: dict[str, Any] = dict(cast(dict[str, Any], value))
+                op_copy: dict[str, Any] = dict(value)
                 raw_resp = op_copy.get("responses")
                 if isinstance(raw_resp, dict):
                     op_copy["responses"] = _preprocess_responses(
-                        raw_responses=cast(dict[str | int, Any], raw_resp),
+                        raw_responses=raw_resp,
                     )
                 new_path_item[method_key] = op_copy
             elif method_key in _PATH_ITEM_NON_METHOD_KEYS:
@@ -395,7 +395,10 @@ def _iter_operations(
     paths = parsed.paths or {}
     for path, path_item in paths.items():
         for method in _HTTP_METHODS:
-            operation: Operation | None = getattr(path_item, method, None)
+            try:
+                operation = object.__getattribute__(path_item, method)
+            except AttributeError:
+                continue
             if operation is not None:
                 yield path, method, operation
 
