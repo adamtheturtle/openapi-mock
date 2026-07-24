@@ -6,8 +6,8 @@ from http import HTTPStatus
 from typing import Any, TypeGuard
 
 import httpx
-import respx
 import responses
+import respx
 from beartype import beartype
 from openapi_pydantic import (
     Components,
@@ -16,9 +16,9 @@ from openapi_pydantic import (
     OpenAPI,
     Operation,
     Reference,
+    Schema,
 )
 from openapi_pydantic import Response as OAResponse
-from openapi_pydantic import Schema
 from openapi_pydantic.v3.v3_1.datatype import DataType
 from pydantic import ValidationError
 
