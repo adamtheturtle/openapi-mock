@@ -3,7 +3,7 @@
 import re
 from collections.abc import Iterator
 from http import HTTPStatus
-from typing import Any, cast  # noqa: TID251
+from typing import Any, TypeGuard
 
 import httpx
 import respx
@@ -36,21 +36,26 @@ _PATH_ITEM_NON_METHOD_KEYS = frozenset(
 )
 
 
+def _is_dict(value: Any, /) -> TypeGuard[dict[Any, Any]]:
+    """Return whether a value is a dictionary with dynamic item types."""
+    return isinstance(value, dict)
+
+
 @beartype
 def _preprocess_schema(*, schema: dict[str, Any]) -> dict[str, Any]:
     """Normalize a schema dict, filtering non-dict property schemas."""
     result = dict(schema)
     props = result.get("properties")
-    if isinstance(props, dict):
-        typed_props = cast(dict[str, Any], props)  # noqa: TID251
+    if _is_dict(props):
+        typed_props: dict[str, Any] = props
         result["properties"] = {
-            k: _preprocess_schema(schema=cast(dict[str, Any], v))  # noqa: TID251
+            k: _preprocess_schema(schema=v)
             for k, v in typed_props.items()
-            if isinstance(v, dict)
+            if _is_dict(v)
         }
     items = result.get("items")
-    if isinstance(items, dict):
-        result["items"] = _preprocess_schema(schema=cast(dict[str, Any], items))  # noqa: TID251
+    if _is_dict(items):
+        result["items"] = _preprocess_schema(schema=items)
     return result
 
 
@@ -59,10 +64,10 @@ def _preprocess_content(*, content: dict[str, Any]) -> dict[str, Any]:
     """Normalize a content dict, filtering non-dict media types."""
     result: dict[str, Any] = {}
     for media_type_key, media_type_val in content.items():
-        if not isinstance(media_type_val, dict):
+        if not _is_dict(media_type_val):
             continue
-        media_copy: dict[str, Any] = dict(cast(dict[str, Any], media_type_val))  # noqa: TID251
-        if isinstance(media_copy.get("schema"), dict):
+        media_copy: dict[str, Any] = dict(media_type_val)
+        if _is_dict(media_copy.get("schema")):
             media_copy["schema"] = _preprocess_schema(
                 schema=media_copy["schema"],
             )
@@ -83,15 +88,15 @@ def _preprocess_responses(
     new_responses: dict[str, Any] = {}
     for status_key, resp_val in raw_responses.items():
         str_key = f"{status_key}"
-        if not isinstance(resp_val, dict):
+        if not _is_dict(resp_val):
             continue
-        resp_copy: dict[str, Any] = dict(cast(dict[str, Any], resp_val))  # noqa: TID251
+        resp_copy: dict[str, Any] = dict(resp_val)
         if "description" not in resp_copy:
             resp_copy["description"] = ""
         content = resp_copy.get("content")
-        if isinstance(content, dict):
+        if _is_dict(content):
             resp_copy["content"] = _preprocess_content(
-                content=cast(dict[str, Any], content),  # noqa: TID251
+                content=content,
             )
         new_responses[str_key] = resp_copy
     return new_responses
@@ -114,25 +119,25 @@ def _preprocess_spec(*, spec: dict[str, Any]) -> dict[str, Any]:
     result["openapi"] = "3.1.0"
 
     paths = result.get("paths")
-    if not isinstance(paths, dict):
+    if not _is_dict(paths):
         return result
 
-    typed_paths = cast(dict[str, Any], paths)  # noqa: TID251
+    typed_paths: dict[str, Any] = paths
     new_paths: dict[str, Any] = {}
     for path_key, path_item in typed_paths.items():
-        if not isinstance(path_item, dict):
+        if not _is_dict(path_item):
             continue
-        typed_path_item = cast(dict[str, Any], path_item)  # noqa: TID251
+        typed_path_item: dict[str, Any] = path_item
         new_path_item: dict[str, Any] = {}
         for method_key, value in typed_path_item.items():
             if method_key.lower() in _HTTP_METHODS:
-                if not isinstance(value, dict):
+                if not _is_dict(value):
                     continue
-                op_copy: dict[str, Any] = dict(cast(dict[str, Any], value))  # noqa: TID251
+                op_copy: dict[str, Any] = dict(value)
                 raw_resp = op_copy.get("responses")
-                if isinstance(raw_resp, dict):
+                if _is_dict(raw_resp):
                     op_copy["responses"] = _preprocess_responses(
-                        raw_responses=cast(dict[str | int, Any], raw_resp),  # noqa: TID251
+                        raw_responses=raw_resp,
                     )
                 new_path_item[method_key] = op_copy
             elif method_key in _PATH_ITEM_NON_METHOD_KEYS:
