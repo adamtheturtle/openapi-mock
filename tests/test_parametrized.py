@@ -6,11 +6,11 @@ from typing import Any
 import httpx
 import pytest
 import requests
-import respx
 import responses
+import respx
 from beartype import beartype
 
-from openapi_mock import add_openapi_to_respx, add_openapi_to_responses
+from openapi_mock import add_openapi_to_responses, add_openapi_to_respx
 
 BASE_URL = "https://api.example.com"
 
