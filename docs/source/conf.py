@@ -1,7 +1,7 @@
 """Configuration for Sphinx."""
 
-import os
 import importlib.metadata
+import os
 from pathlib import Path
 
 from packaging.specifiers import SpecifierSet
