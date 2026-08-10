@@ -950,13 +950,13 @@ wheels = [
 
 [[package]]
 name = "no-defaults"
-version = "1.0.1"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f2/54/3454e62945b092758b587e0e4b7cf35aa77f88da5fc43f20790bf5d433ad/no_defaults-1.0.1.tar.gz", hash = "sha256:c309ae30960a08ebc2436e7a45aeea46b5eb1c73c65bf02220e41e5b5d01721c", size = 28426, upload-time = "2026-08-05T22:15:00.523Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/82/eac420b63b8b0561410a58e21129ea28d128a240a9a5ea3fd9a1d755c747/no_defaults-2.0.0.tar.gz", hash = "sha256:56305df96cd5b3fbf021c1c95cd0ab429f957ac482332cc89f0ec5832e4f67c9", size = 90874, upload-time = "2026-08-07T08:38:55.151Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6d/de/1e7659c6ce5babd9fa57c14463e2b50536b9d6d1754f58db0f0307da6986/no_defaults-1.0.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:4584dff7a7bdf632ccff600bae628276ba66a9ede156808e55e6c9c411982d4f", size = 2034147, upload-time = "2026-08-05T22:14:55.306Z" },
-    { url = "https://files.pythonhosted.org/packages/8a/2c/ff7f38b88649560ca6d18a0a5652c30f969438f0a8d993991825ba8c7ee9/no_defaults-1.0.1-py3-none-manylinux_2_34_x86_64.whl", hash = "sha256:da5ed90cedddebddfbda4bd3fa180eba42b39814e118b7f297cd6f7705edb6a7", size = 2206221, upload-time = "2026-08-05T22:14:57.542Z" },
-    { url = "https://files.pythonhosted.org/packages/fe/a0/66a4ac44d0216e88e924e54756cee8282f4f04f646c02c5931b7f9bed933/no_defaults-1.0.1-py3-none-win_amd64.whl", hash = "sha256:31c9f3252b54d5e04e061f7aaf3b08571236eec5db1f20be91cc3cbf4be92827", size = 1931806, upload-time = "2026-08-05T22:14:59.254Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/84/3c6a5c0f0a643d8045e120456e12d14a58e664f2ad21f526d1d2426aeae8/no_defaults-2.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:08ea91861e0a0668d5c4c0f4f01caf0c31f88f95410811493d02aad6c2011b54", size = 2141160, upload-time = "2026-08-07T08:38:49.846Z" },
+    { url = "https://files.pythonhosted.org/packages/85/5d/4140039bd0e3ad7022d57df35b95c132e9deca18dc2453f656a0d9d18c72/no_defaults-2.0.0-py3-none-manylinux_2_34_x86_64.whl", hash = "sha256:2e8ac977bbcd2bf2ba3c190e4bf7903c7c0845f897d67dfaa4bafbfd5be08a71", size = 2329340, upload-time = "2026-08-07T08:38:51.842Z" },
+    { url = "https://files.pythonhosted.org/packages/25/cb/a0ed7cbafb37aa19221cbc44a2c27b40e8c8a8dee5856bd749463b20f4d3/no_defaults-2.0.0-py3-none-win_amd64.whl", hash = "sha256:10a3ab94ff42831a7739b67788cf6836fcbf32e9c9cbaebe69abd05b89386d5e", size = 2051154, upload-time = "2026-08-07T08:38:53.604Z" },
 ]
 
 [[package]]
@@ -1042,7 +1042,7 @@ requires-dist = [
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
     { name = "mypy", extras = ["faster-cache"], marker = "extra == 'dev'", specifier = "==2.3.0" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.7.19.1" },
-    { name = "no-defaults", marker = "extra == 'dev'", specifier = "==1.0.1" },
+    { name = "no-defaults", marker = "extra == 'dev'", specifier = "==2.0.0" },
     { name = "openapi-pydantic", specifier = ">=0.5.0" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.4.12" },
     { name = "pydantic", specifier = ">=2.0.0" },
