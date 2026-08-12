@@ -214,6 +214,7 @@ max_supported_python = "3.14"
 [tool.mypy]
 files = [ "." ]
 exclude = [ ".venv", "build" ]
+exclude_gitignore = true
 strict = true
 plugins = [ "mypy_strict_kwargs" ]
 
