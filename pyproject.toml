@@ -149,7 +149,7 @@ ignore = [
     "*.pyc",
     ".editorconfig",
     ".git_archival.txt",
-    ".pre-commit-config.yaml",
+    "prek.toml",
     ".prettierrc",
     ".vale.ini",
     ".vscode/*.json",
