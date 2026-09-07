@@ -1,20 +1,26 @@
-"""Parametrized tests that run with both respx and responses backends."""
+"""Parametrized tests that run with every supported backend."""
 
+import asyncio
 from http import HTTPMethod, HTTPStatus
 from typing import Any
 
 import httpx
+import httpx2
 import pytest
 import requests
 import responses
 import respx
 from beartype import beartype
 
-from openapi_mock import add_openapi_to_responses, add_openapi_to_respx
+from openapi_mock import (
+    add_openapi_to_responses,
+    add_openapi_to_respx,
+    create_httpx2_transport,
+)
 
 BASE_URL = "https://api.example.com"
 
-_Response = httpx.Response | requests.Response
+_Response = httpx.Response | httpx2.Response | requests.Response
 
 
 @beartype
@@ -52,6 +58,23 @@ def _run_responses(
 
 
 @beartype
+def _run_httpx2(
+    *,
+    spec: dict[str, Any],
+    url: str,
+    base_url: str,
+    method: HTTPMethod,
+    params: dict[str, Any] | None,
+) -> httpx2.Response:
+    """Run a request against the native HTTPX2 transport."""
+    transport = create_httpx2_transport(spec=spec, base_url=base_url)
+    with httpx2.Client(transport=transport) as client:
+        if method == HTTPMethod.GET:
+            return client.request(method=method, url=url, params=params)
+        return client.request(method=method, url=url, json=params or {})
+
+
+@beartype
 def _run(
     *,
     backend: str,
@@ -66,7 +89,11 @@ def _run(
         return _run_respx(
             spec=spec, url=url, base_url=base_url, method=method, params=params
         )
-    return _run_responses(
+    if backend == "responses":
+        return _run_responses(
+            spec=spec, url=url, base_url=base_url, method=method, params=params
+        )
+    return _run_httpx2(
         spec=spec, url=url, base_url=base_url, method=method, params=params
     )
 
@@ -77,14 +104,87 @@ def _setup(*, backend: str, spec: dict[str, Any], base_url: str) -> None:
     if backend == "respx":
         with respx.mock(base_url=base_url, assert_all_called=False) as m:
             add_openapi_to_respx(mock_obj=m, spec=spec, base_url=base_url)
-    else:
+    elif backend == "responses":
         with responses.RequestsMock() as rsps:
             add_openapi_to_responses(spec=spec, base_url=base_url, mock=rsps)
+    else:
+        create_httpx2_transport(spec=spec, base_url=base_url)
 
 
 _BACKEND = pytest.mark.parametrize(
-    argnames="backend", argvalues=["respx", "responses"], ids=["respx", "responses"]
+    argnames="backend",
+    argvalues=["respx", "responses", "httpx2"],
+    ids=["respx", "responses", "httpx2"],
 )
+
+
+def test_httpx2_transport_uses_native_objects() -> None:
+    """The HTTPX2 backend receives and returns native HTTPX2 objects."""
+    spec: dict[str, Any] = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {"example": {"name": "Fluffy"}},
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    transport = create_httpx2_transport(spec=spec, base_url=BASE_URL)
+
+    with httpx2.Client(transport=transport) as client:
+        response = client.get(url=f"{BASE_URL}/pets")
+
+    assert isinstance(response, httpx2.Response)
+    assert isinstance(response.request, httpx2.Request)
+    assert response.json() == {"name": "Fluffy"}
+
+
+def test_httpx2_transport_supports_async_clients() -> None:
+    """The native transport can also serve an asynchronous HTTPX2 client."""
+    spec: dict[str, Any] = {
+        "openapi": "3.0.0",
+        "paths": {"/pets": {"get": {"responses": {"200": {}}}}},
+    }
+    transport = create_httpx2_transport(spec=spec, base_url=BASE_URL)
+
+    async def request() -> httpx2.Response:
+        """Make an asynchronous request through the native transport."""
+        async with httpx2.AsyncClient(transport=transport) as client:
+            return await client.get(url=f"{BASE_URL}/pets")
+
+    response = asyncio.run(main=request())
+
+    assert isinstance(response, httpx2.Response)
+    assert response.status_code == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    argnames=("method", "path"),
+    argvalues=[("POST", "/pets"), ("GET", "/missing")],
+)
+def test_httpx2_transport_rejects_unmatched_requests(method: str, path: str) -> None:
+    """Unmatched HTTPX2 requests fail locally without network access."""
+    spec: dict[str, Any] = {
+        "openapi": "3.0.0",
+        "paths": {"/pets": {"get": {"responses": {"200": {}}}}},
+    }
+    transport = create_httpx2_transport(spec=spec, base_url=BASE_URL)
+
+    with (
+        httpx2.Client(transport=transport) as client,
+        pytest.raises(
+            expected_exception=httpx2.ConnectError,
+            match="No OpenAPI operation matched",
+        ),
+    ):
+        client.request(method=method, url=f"{BASE_URL}{path}")
 
 
 @_BACKEND

@@ -11,6 +11,7 @@ backends
 beartype
 dicts
 httpx
+httpx2
 intersphinx
 ints
 json

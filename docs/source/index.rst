@@ -1,7 +1,7 @@
 |project|
 =========
 
-|project| serves an OpenAPI spec as a mock with `respx`_.
+|project| serves an OpenAPI spec as a mock with HTTPX2, `respx`_ or `responses`_.
 
 Installation
 ------------
@@ -14,6 +14,34 @@ Requires Python |minimum-python-version|\+.
 
 Usage
 -----
+
+With HTTPX2
+~~~~~~~~~~~
+
+.. code-block:: python
+
+   """Example usage with HTTPX2."""
+
+   from http import HTTPStatus
+
+   import httpx2
+
+   from openapi_mock import create_httpx2_transport
+
+   spec = {
+       "openapi": "3.0.0",
+       "paths": {"/pets": {"get": {"responses": {"200": {"description": "OK"}}}}},
+   }
+   transport = create_httpx2_transport(
+       spec=spec,
+       base_url="https://api.example.com",
+   )
+   with httpx2.Client(transport=transport) as client:
+       response = client.get(url="https://api.example.com/pets")
+   assert response.status_code == HTTPStatus.OK
+
+With respx (httpx)
+~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -53,3 +81,4 @@ Reference
    contributing
 
 .. _respx: https://lundberg.github.io/respx/
+.. _responses: https://github.com/getsentry/responses
