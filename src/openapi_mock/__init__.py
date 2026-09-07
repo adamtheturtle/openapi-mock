@@ -281,7 +281,7 @@ def _generate_from_schema(
                         components=components,
                     )
                 ]
-        return []
+        return list[Any]()
     if schema_type == DataType.STRING:
         return ""
     if schema_type in (DataType.NUMBER, DataType.INTEGER):
@@ -290,7 +290,7 @@ def _generate_from_schema(
         return False
     if schema_type == DataType.NULL:
         return None
-    return {}
+    return dict[str, Any]()
 
 
 @beartype
