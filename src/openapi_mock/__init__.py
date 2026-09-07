@@ -1,4 +1,4 @@
-"""Package for serving an OpenAPI spec as a mock with respx or responses."""
+"""Package for serving an OpenAPI spec as a mock with HTTPX2, respx or responses."""
 
 import re
 from collections.abc import Iterator
@@ -6,6 +6,7 @@ from http import HTTPStatus
 from typing import Any, TypeGuard
 
 import httpx
+import httpx2
 import responses
 import respx
 from beartype import beartype
@@ -465,6 +466,62 @@ def _path_to_url_pattern(
     """Convert OpenAPI path to full URL regex pattern for path param matching."""
     base = base_url.rstrip("/")
     return f"{re.escape(pattern=base)}{_path_to_pattern(path=path)}"
+
+
+@beartype
+def create_httpx2_transport(
+    *,
+    spec: dict[str, Any],
+    base_url: str,
+) -> httpx2.MockTransport:
+    """Create a native HTTPX2 transport loaded from an OpenAPI spec.
+
+    Requests that match an operation in the spec receive the same generated
+    response as the respx and responses backends. Unmatched requests raise
+    :class:`httpx2.ConnectError` locally rather than reaching the network.
+
+    :param spec: OpenAPI 3.0 or 3.1 spec as a dict (from JSON or YAML).
+    :param base_url: Base URL for all routes.
+    :return: A mock transport for ``httpx2.Client`` or
+        ``httpx2.AsyncClient``.
+    """
+    routes: list[tuple[str, re.Pattern[str], int, Any]] = []
+    parsed = _parse_spec(spec=spec)
+    if parsed is not None:
+        components = parsed.components
+        for path, method, operation in _iter_operations(parsed=parsed):
+            status_code, json_body = _get_response_body(
+                operation=operation,
+                components=components,
+            )
+            code = (
+                int(status_code) if isinstance(status_code, HTTPStatus) else status_code
+            )
+            url_pattern = _path_to_url_pattern(base_url=base_url, path=path)
+            routes.append(
+                (
+                    method.upper(),
+                    re.compile(pattern=f"^{url_pattern}(?:\\?.*)?$"),
+                    code,
+                    json_body,
+                )
+            )
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        """Return the generated response for a matching OpenAPI operation."""
+        for method, url_pattern, status_code, json_body in routes:
+            if method == request.method and url_pattern.fullmatch(
+                string=str(object=request.url)
+            ):
+                return httpx2.Response(
+                    status_code=status_code,
+                    json=json_body,
+                    request=request,
+                )
+        message = f"No OpenAPI operation matched {request.method} {request.url}"
+        raise httpx2.ConnectError(message=message, request=request)
+
+    return httpx2.MockTransport(handler=handler)
 
 
 @beartype
