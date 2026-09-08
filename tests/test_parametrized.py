@@ -1,8 +1,8 @@
 """Parametrized tests that run with every supported backend."""
 
 import asyncio
+from collections.abc import Mapping
 from http import HTTPMethod, HTTPStatus
-from typing import Any
 
 import httpx
 import httpx2
@@ -21,68 +21,87 @@ from openapi_mock import (
 BASE_URL = "https://api.example.com"
 
 _Response = httpx.Response | httpx2.Response | requests.Response
+_RequestParams = Mapping[str, bool | float | int | str | None]
+
+
+def _params_or_empty(*, params: _RequestParams | None) -> _RequestParams:
+    """Return an empty request body when parameters are absent."""
+    return {} if params is None else params
 
 
 @beartype
 def _run_respx(
     *,
-    spec: dict[str, Any],
+    spec: Mapping[str, object],
     url: str,
     base_url: str,
     method: HTTPMethod,
-    params: dict[str, Any] | None,
+    params: _RequestParams | None,
 ) -> _Response:
     """Run a request against the respx backend."""
     with respx.mock(base_url=base_url, assert_all_called=False) as m:
         add_openapi_to_respx(mock_obj=m, spec=spec, base_url=base_url)
         if method == HTTPMethod.GET:
             return httpx.request(method=method, url=url, params=params)
-        return httpx.request(method=method, url=url, json=params or {})
+        return httpx.request(
+            method=method,
+            url=url,
+            json=_params_or_empty(params=params),
+        )
 
 
 @beartype
 def _run_responses(
     *,
-    spec: dict[str, Any],
+    spec: Mapping[str, object],
     url: str,
     base_url: str,
     method: HTTPMethod,
-    params: dict[str, Any] | None,
+    params: _RequestParams | None,
 ) -> _Response:
     """Run a request against the responses backend."""
     with responses.RequestsMock() as rsps:
         add_openapi_to_responses(spec=spec, base_url=base_url, mock=rsps)
         if method == HTTPMethod.GET:
             return requests.request(method=method, url=url, params=params, timeout=30)
-        return requests.request(method=method, url=url, json=params or {}, timeout=30)
+        return requests.request(
+            method=method,
+            url=url,
+            json=_params_or_empty(params=params),
+            timeout=30,
+        )
 
 
 @beartype
 def _run_httpx2(
     *,
-    spec: dict[str, Any],
+    spec: Mapping[str, object],
     url: str,
     base_url: str,
     method: HTTPMethod,
-    params: dict[str, Any] | None,
+    params: _RequestParams | None,
 ) -> httpx2.Response:
     """Run a request against the native HTTPX2 transport."""
     transport = create_httpx2_transport(spec=spec, base_url=base_url)
     with httpx2.Client(transport=transport) as client:
         if method == HTTPMethod.GET:
             return client.request(method=method, url=url, params=params)
-        return client.request(method=method, url=url, json=params or {})
+        return client.request(
+            method=method,
+            url=url,
+            json=_params_or_empty(params=params),
+        )
 
 
 @beartype
 def _run(
     *,
     backend: str,
-    spec: dict[str, Any],
+    spec: Mapping[str, object],
     url: str,
     base_url: str,
     method: HTTPMethod,
-    params: dict[str, Any] | None,
+    params: _RequestParams | None,
 ) -> _Response:
     """Run a request against the given backend."""
     if backend == "respx":
@@ -99,7 +118,7 @@ def _run(
 
 
 @beartype
-def _setup(*, backend: str, spec: dict[str, Any], base_url: str) -> None:
+def _setup(*, backend: str, spec: Mapping[str, object], base_url: str) -> None:
     """Set up mock from spec (no request). Verifies setup does not crash."""
     if backend == "respx":
         with respx.mock(base_url=base_url, assert_all_called=False) as m:
@@ -108,7 +127,7 @@ def _setup(*, backend: str, spec: dict[str, Any], base_url: str) -> None:
         with responses.RequestsMock() as rsps:
             add_openapi_to_responses(spec=spec, base_url=base_url, mock=rsps)
     else:
-        create_httpx2_transport(spec=spec, base_url=base_url)
+        _ = create_httpx2_transport(spec=spec, base_url=base_url)
 
 
 _BACKEND = pytest.mark.parametrize(
@@ -120,7 +139,7 @@ _BACKEND = pytest.mark.parametrize(
 
 def test_httpx2_transport_uses_native_objects() -> None:
     """The HTTPX2 backend receives and returns native HTTPX2 objects."""
-    spec: dict[str, Any] = {
+    spec: Mapping[str, object] = {
         "openapi": "3.0.0",
         "paths": {
             "/pets": {
@@ -148,7 +167,7 @@ def test_httpx2_transport_uses_native_objects() -> None:
 
 def test_httpx2_transport_supports_async_clients() -> None:
     """The native transport can also serve an asynchronous HTTPX2 client."""
-    spec: dict[str, Any] = {
+    spec: Mapping[str, object] = {
         "openapi": "3.0.0",
         "paths": {"/pets": {"get": {"responses": {"200": {}}}}},
     }
@@ -171,7 +190,7 @@ def test_httpx2_transport_supports_async_clients() -> None:
 )
 def test_httpx2_transport_rejects_unmatched_requests(method: str, path: str) -> None:
     """Unmatched HTTPX2 requests fail locally without network access."""
-    spec: dict[str, Any] = {
+    spec: Mapping[str, object] = {
         "openapi": "3.0.0",
         "paths": {"/pets": {"get": {"responses": {"200": {}}}}},
     }
@@ -184,13 +203,13 @@ def test_httpx2_transport_rejects_unmatched_requests(method: str, path: str) -> 
             match="No OpenAPI operation matched",
         ),
     ):
-        client.request(method=method, url=f"{BASE_URL}{path}")
+        _ = client.request(method=method, url=f"{BASE_URL}{path}")
 
 
 @_BACKEND
 def test_empty_responses_returns_200_empty(backend: str) -> None:
     """Operation with empty responses returns 200 and empty body."""
-    spec: dict[str, Any] = {
+    spec: Mapping[str, object] = {
         "openapi": "3.0.0",
         "paths": {"/pets": {"get": {"responses": {}}}},
     }
@@ -302,7 +321,7 @@ def test_yaml_integer_status_keys(backend: str) -> None:
         pytest.param({"paths": {"/pets": {"get": "invalid"}}}, id="non_dict_operation"),
     ],
 )
-def test_setup_does_not_crash(backend: str, spec: dict[str, Any]) -> None:
+def test_setup_does_not_crash(backend: str, spec: Mapping[str, object]) -> None:
     """Invalid or non-standard spec inputs are skipped without crashing."""
     _setup(backend=backend, spec=spec, base_url=BASE_URL)
 
@@ -403,7 +422,9 @@ def test_uses_examples_when_no_example(backend: str) -> None:
         ),
     ],
 )
-def test_examples_fallback_to_schema(backend: str, examples: dict[str, Any]) -> None:
+def test_examples_fallback_to_schema(
+    backend: str, examples: Mapping[str, object]
+) -> None:
     """OpenAPI 3.1: examples without a usable value falls back to schema."""
     spec = {
         "openapi": "3.1.0",
@@ -705,8 +726,8 @@ def test_post_path(backend: str) -> None:
 def test_mutating_path(
     backend: str,
     method: HTTPMethod,
-    params: dict[str, Any] | None,
-    example: dict[str, Any],
+    params: _RequestParams | None,
+    example: Mapping[str, object],
 ) -> None:
     """PUT, DELETE, and PATCH paths are mocked (both backends)."""
     spec = {
@@ -851,7 +872,7 @@ def test_prefers_first_2xx_when_no_200_or_201(backend: str) -> None:
     ],
 )
 def test_missing_or_invalid_content_returns_empty(
-    backend: str, json_content: Any
+    backend: str, json_content: object
 ) -> None:
     """Missing or invalid application/json content returns 200 with empty body."""
     spec = {
@@ -1052,7 +1073,7 @@ def test_first_response_when_no_2xx(backend: str) -> None:
 @_BACKEND
 def test_skips_invalid(backend: str) -> None:
     """Skips non-dict path items and non-HTTP methods."""
-    spec: dict[str, Any] = {
+    spec: Mapping[str, object] = {
         "openapi": "3.0.0",
         "paths": {
             "/valid": {
@@ -1163,7 +1184,7 @@ def test_spec_with_info(backend: str) -> None:
 @_BACKEND
 def test_no_paths_key(backend: str) -> None:
     """Spec with no paths key does not crash."""
-    spec: dict[str, Any] = {"openapi": "3.0.0"}
+    spec: Mapping[str, object] = {"openapi": "3.0.0"}
     _setup(backend=backend, spec=spec, base_url=BASE_URL)
 
 
@@ -1219,7 +1240,7 @@ def test_path_item_unknown_key(backend: str) -> None:
 @_BACKEND
 def test_unparseable_spec(backend: str) -> None:
     """Spec that fails model_validate after preprocessing does not crash."""
-    spec: dict[str, Any] = {
+    spec: Mapping[str, object] = {
         "openapi": "3.0.0",
         "servers": "invalid",
         "paths": {},
