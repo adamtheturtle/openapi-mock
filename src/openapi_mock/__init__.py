@@ -427,7 +427,7 @@ def _iter_operations(
         return
     for path, path_item in paths.items():
         for method in _HTTP_METHODS:
-            operation: Operation | None = getattr(path_item, method, None)  # pylint: disable=bad-builtin
+            operation: Operation | None = getattr(path_item, method, None)  # pylint: disable=bad-builtin  # ty: ignore[unsound-assignment]
             if operation is not None:
                 yield path, method, operation
 

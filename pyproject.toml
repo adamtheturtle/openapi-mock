@@ -88,13 +88,15 @@ fallback_version = "0.0.0"
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-lint.extend-select = [ "C901", "ERA001" ]
+lint.extend-select = [ "ANN", "C901", "ERA001", "PGH003", "PYI" ]
+lint.explicit-preview-rules = true
 lint.unfixable = [ "ERA001" ]
 lint.external = [ "NOD" ]
 lint.flake8-tidy-imports.banned-api."typing.cast".msg = """\
     typing.cast is banned: use explicit type narrowing or a typed variable instead.\
     """
 lint.mccabe.max-complexity = 12
+lint.preview = true
 
 [tool.pylint]
 DEPRECATED_BUILTINS.bad-functions = [
@@ -229,8 +231,21 @@ enableTypeIgnoreComments = false
 reportUnnecessaryTypeIgnoreComment = true
 
 [tool.ty]
+rules.blanket-ignore-comment = "error"
+rules.division-by-zero = "warn"
+rules.dynamic-function-decorator-return = "error"
+rules.missing-type-argument = "error"
+rules.possibly-missing-attribute = "warn"
+rules.possibly-missing-import = "warn"
+rules.possibly-unresolved-reference = "warn"
+rules.unsound-assignment = "error"
+rules.unsound-return-statement = "error"
+rules.unsound-yield = "error"
+rules.unsupported-dynamic-base = "warn"
 terminal.error-on-warning = true
 analysis.respect-type-ignore-comments = false
+analysis.strict-equality-semantics = true
+analysis.strict-generic-narrowing = true
 
 [tool.pytest]
 ini_options.xfail_strict = true
