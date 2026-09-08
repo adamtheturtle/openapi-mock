@@ -6,7 +6,7 @@ Development setup
 
 .. code-block:: console
 
-   uv sync --all-extras
+   uv sync --group dev
 
 Running tests
 -------------
