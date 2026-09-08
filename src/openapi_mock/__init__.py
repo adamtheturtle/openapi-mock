@@ -1,9 +1,9 @@
 """Package for serving an OpenAPI spec as a mock with HTTPX2, respx or responses."""
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from http import HTTPStatus
-from typing import Any, TypeGuard
+from typing import TypeGuard
 
 import httpx
 import httpx2
@@ -37,18 +37,23 @@ _PATH_ITEM_NON_METHOD_KEYS = frozenset(
 )
 
 
-def _is_dict(value: Any, /) -> TypeGuard[dict[Any, Any]]:
-    """Return whether a value is a dictionary with dynamic item types."""
+def _is_dict(value: object, /) -> TypeGuard[dict[str, object]]:
+    """Narrow a dictionary to string-keyed OpenAPI data."""
+    return isinstance(value, dict)
+
+
+def _is_responses_dict(value: object, /) -> TypeGuard[dict[str | int, object]]:
+    """Narrow a dictionary to an OpenAPI responses mapping."""
     return isinstance(value, dict)
 
 
 @beartype
-def _preprocess_schema(*, schema: dict[str, Any]) -> dict[str, Any]:
+def _preprocess_schema(*, schema: Mapping[str, object]) -> dict[str, object]:
     """Normalize a schema dict, filtering non-dict property schemas."""
     result = dict(schema)
     props = result.get("properties")
     if _is_dict(props):
-        typed_props: dict[str, Any] = props
+        typed_props: dict[str, object] = props
         result["properties"] = {
             k: _preprocess_schema(schema=v)
             for k, v in typed_props.items()
@@ -61,21 +66,22 @@ def _preprocess_schema(*, schema: dict[str, Any]) -> dict[str, Any]:
 
 
 @beartype
-def _preprocess_content(*, content: dict[str, Any]) -> dict[str, Any]:
+def _preprocess_content(*, content: Mapping[str, object]) -> dict[str, object]:
     """Normalize a content dict, filtering non-dict media types."""
-    result: dict[str, Any] = {}
+    result: dict[str, object] = {}
     for media_type_key, media_type_val in content.items():
         if not _is_dict(media_type_val):
             continue
-        media_copy: dict[str, Any] = dict(media_type_val)
-        if _is_dict(media_copy.get("schema")):
+        media_copy: dict[str, object] = dict(media_type_val)
+        media_schema = media_copy.get("schema")
+        if _is_dict(media_schema):
             media_copy["schema"] = _preprocess_schema(
-                schema=media_copy["schema"],
+                schema=media_schema,
             )
-        elif media_copy.get("schema") is not None:
+        elif media_schema is not None:
             # Boolean schemas (True/False) and other non-dict values are
             # not supported by openapi-pydantic. Remove them.
-            media_copy.pop("schema", None)
+            _ = media_copy.pop("schema", None)
         result[media_type_key] = media_copy
     return result
 
@@ -83,15 +89,15 @@ def _preprocess_content(*, content: dict[str, Any]) -> dict[str, Any]:
 @beartype
 def _preprocess_responses(
     *,
-    raw_responses: dict[str | int, Any],
-) -> dict[str, Any]:
+    raw_responses: Mapping[str | int, object],
+) -> dict[str, object]:
     """Normalize response dicts: int keys to str, add description, filter invalid."""
-    new_responses: dict[str, Any] = {}
+    new_responses: dict[str, object] = {}
     for status_key, resp_val in raw_responses.items():
         str_key = f"{status_key}"
         if not _is_dict(resp_val):
             continue
-        resp_copy: dict[str, Any] = dict(resp_val)
+        resp_copy: dict[str, object] = dict(resp_val)
         if "description" not in resp_copy:
             resp_copy["description"] = ""
         content = resp_copy.get("content")
@@ -104,7 +110,7 @@ def _preprocess_responses(
 
 
 @beartype
-def _preprocess_spec(*, spec: dict[str, Any]) -> dict[str, Any]:
+def _preprocess_spec(*, spec: Mapping[str, object]) -> dict[str, object]:
     """Normalize a raw spec dict for openapi-pydantic parsing.
 
     Converts YAML int keys to str, adds missing required fields,
@@ -123,20 +129,20 @@ def _preprocess_spec(*, spec: dict[str, Any]) -> dict[str, Any]:
     if not _is_dict(paths):
         return result
 
-    typed_paths: dict[str, Any] = paths
-    new_paths: dict[str, Any] = {}
+    typed_paths: dict[str, object] = paths
+    new_paths: dict[str, object] = {}
     for path_key, path_item in typed_paths.items():
         if not _is_dict(path_item):
             continue
-        typed_path_item: dict[str, Any] = path_item
-        new_path_item: dict[str, Any] = {}
+        typed_path_item: dict[str, object] = path_item
+        new_path_item: dict[str, object] = {}
         for method_key, value in typed_path_item.items():
             if method_key.lower() in _HTTP_METHODS:
                 if not _is_dict(value):
                     continue
-                op_copy: dict[str, Any] = dict(value)
+                op_copy: dict[str, object] = dict(value)
                 raw_resp = op_copy.get("responses")
-                if _is_dict(raw_resp):
+                if _is_responses_dict(raw_resp):
                     op_copy["responses"] = _preprocess_responses(
                         raw_responses=raw_resp,
                     )
@@ -149,7 +155,7 @@ def _preprocess_spec(*, spec: dict[str, Any]) -> dict[str, Any]:
 
 
 @beartype
-def _parse_spec(*, spec: dict[str, Any]) -> OpenAPI | None:
+def _parse_spec(*, spec: Mapping[str, object]) -> OpenAPI | None:
     """Parse a raw spec dict into an OpenAPI model.
 
     Returns None on failure.
@@ -237,11 +243,33 @@ def _resolve_example_ref(
 
 
 @beartype
+def _generate_object_from_schema(
+    *, schema: Schema, components: Components | None
+) -> dict[str, object]:
+    """Generate a mock JSON object from schema properties."""
+    result: dict[str, object] = {}
+    properties = schema.properties
+    if properties is None:
+        return result
+    for prop_name, prop_schema_or_ref in properties.items():
+        resolved = _resolve_schema_ref(
+            ref_or_obj=prop_schema_or_ref,
+            components=components,
+        )
+        if resolved is not None:
+            result[prop_name] = _generate_from_schema(
+                schema=resolved,
+                components=components,
+            )
+    return result
+
+
+@beartype
 def _generate_from_schema(
     *,
     schema: Schema,
     components: Components | None,
-) -> Any:
+) -> object:
     """Generate mock JSON from a Schema model.
 
     Handles type, properties, items. Supports type as array (OpenAPI 3.1).
@@ -249,24 +277,16 @@ def _generate_from_schema(
     """
     schema_type = schema.type
     # OpenAPI 3.1 / JSON Schema 2020-12: type can be array, e.g. ["string", "null"]
-    if isinstance(schema_type, list) and schema_type:
+    if isinstance(schema_type, list) and len(schema_type) > 0:
         schema_type = next(
             (t for t in schema_type if t != DataType.NULL),
             schema_type[0],
         )
     if schema_type == DataType.OBJECT:
-        result: dict[str, Any] = {}
-        for prop_name, prop_schema_or_ref in (schema.properties or {}).items():
-            resolved = _resolve_schema_ref(
-                ref_or_obj=prop_schema_or_ref,
-                components=components,
-            )
-            if resolved is not None:
-                result[prop_name] = _generate_from_schema(
-                    schema=resolved,
-                    components=components,
-                )
-        return result
+        return _generate_object_from_schema(
+            schema=schema,
+            components=components,
+        )
     if schema_type == DataType.ARRAY:
         items = schema.items
         if items is not None:
@@ -281,7 +301,7 @@ def _generate_from_schema(
                         components=components,
                     )
                 ]
-        return list[Any]()
+        return list[object]()
     if schema_type == DataType.STRING:
         return ""
     if schema_type in (DataType.NUMBER, DataType.INTEGER):
@@ -290,7 +310,7 @@ def _generate_from_schema(
         return False
     if schema_type == DataType.NULL:
         return None
-    return dict[str, Any]()
+    return dict[str, object]()
 
 
 @beartype
@@ -298,15 +318,16 @@ def _get_example_from_content(
     *,
     media_type: MediaType,
     components: Components | None,
-) -> Any | None:
+) -> object | None:
     """Get example value from a MediaType.
 
     Checks OpenAPI 3.0 example then 3.1 examples. Returns None if not found.
     """
     if media_type.example is not None:
-        return media_type.example
+        example_value: object = media_type.example
+        return example_value
     examples = media_type.examples
-    if not examples:
+    if examples is None or len(examples) == 0:
         return None
     first_ex_or_ref = next(iter(examples.values()))
     resolved = _resolve_example_ref(
@@ -314,12 +335,13 @@ def _get_example_from_content(
         components=components,
     )
     if resolved is not None and resolved.value is not None:
-        return resolved.value
+        resolved_value: object = resolved.value
+        return resolved_value
     return None
 
 
 @beartype
-def _select_status_key(*, raw_responses: dict[str, Any]) -> str:
+def _select_status_key(*, raw_responses: Mapping[str, object]) -> str:
     """Select the best status key from a preprocessed responses dict.
 
     Prefers 200, then 201, then first 2xx, then first available key.
@@ -341,15 +363,15 @@ def _get_response_body(
     *,
     operation: Operation,
     components: Components | None,
-) -> tuple[int | HTTPStatus, Any]:
+) -> tuple[int | HTTPStatus, object]:
     """Get (status_code, json_body) for the best response in an operation.
 
     Prefers 200, then 201, then first 2xx, then first response.
     Uses example if present, else generates from schema.
     """
-    raw_responses = operation.responses or {}
-    if not raw_responses:
-        return HTTPStatus.OK, {}
+    raw_responses = operation.responses
+    if raw_responses is None or len(raw_responses) == 0:
+        return HTTPStatus.OK, dict[str, object]()
 
     status_key = _select_status_key(raw_responses=raw_responses)
 
@@ -367,12 +389,14 @@ def _get_response_body(
         components=components,
     )
     if response is None:
-        return default_status, {}
+        return default_status, dict[str, object]()
 
-    content = response.content or {}
+    content = response.content
+    if content is None:
+        return default_status, dict[str, object]()
     media = content.get("application/json")
     if media is None:
-        return default_status, {}
+        return default_status, dict[str, object]()
 
     example = _get_example_from_content(media_type=media, components=components)
     if example is not None:
@@ -389,7 +413,7 @@ def _get_response_body(
                 schema=resolved,
                 components=components,
             )
-    return default_status, {}
+    return default_status, dict[str, object]()
 
 
 @beartype
@@ -398,7 +422,9 @@ def _iter_operations(
     parsed: OpenAPI,
 ) -> Iterator[tuple[str, str, Operation]]:
     """Yield (path, method, Operation) from a parsed OpenAPI model."""
-    paths = parsed.paths or {}
+    paths = parsed.paths
+    if paths is None:
+        return
     for path, path_item in paths.items():
         for method in _HTTP_METHODS:
             operation: Operation | None = getattr(path_item, method, None)  # pylint: disable=bad-builtin
@@ -410,7 +436,7 @@ def _iter_operations(
 def add_openapi_to_respx(
     *,
     mock_obj: respx.MockRouter | respx.Router,
-    spec: dict[str, Any],
+    spec: Mapping[str, object],
     base_url: str,
 ) -> None:
     """Add mock routes from an OpenAPI spec to a respx mock/router.
@@ -432,12 +458,12 @@ def add_openapi_to_respx(
         )
         if "{" in path:
             path_pattern = _path_to_pattern(path=path)
-            mock_obj.route(
+            _ = mock_obj.route(
                 method=method.upper(),
                 path__regex=re.compile(pattern=f"^{path_pattern}$"),
             ).mock(return_value=httpx.Response(status_code=status_code, json=json_body))
         else:
-            mock_obj.route(
+            _ = mock_obj.route(
                 method=method.upper(),
                 path=path,
             ).mock(return_value=httpx.Response(status_code=status_code, json=json_body))
@@ -450,7 +476,7 @@ def _path_to_pattern(*, path: str) -> str:
     segments = path_part.split(sep="/")
     pattern_parts = [
         "[^/]+"
-        if re.match(pattern=r"^\{[^}]*\}$", string=seg)
+        if re.match(pattern=r"^\{[^}]*\}$", string=seg) is not None
         else re.escape(pattern=seg)
         for seg in segments
     ]
@@ -471,7 +497,7 @@ def _path_to_url_pattern(
 @beartype
 def create_httpx2_transport(
     *,
-    spec: dict[str, Any],
+    spec: Mapping[str, object],
     base_url: str,
 ) -> httpx2.MockTransport:
     """Create a native HTTPX2 transport loaded from an OpenAPI spec.
@@ -485,7 +511,7 @@ def create_httpx2_transport(
     :return: A mock transport for ``httpx2.Client`` or
         ``httpx2.AsyncClient``.
     """
-    routes: list[tuple[str, re.Pattern[str], int, Any]] = []
+    routes: list[tuple[str, re.Pattern[str], int, object]] = []
     parsed = _parse_spec(spec=spec)
     if parsed is not None:
         components = parsed.components
@@ -510,8 +536,9 @@ def create_httpx2_transport(
     def handler(request: httpx2.Request) -> httpx2.Response:
         """Return the generated response for a matching OpenAPI operation."""
         for method, url_pattern, status_code, json_body in routes:
-            if method == request.method and url_pattern.fullmatch(
-                string=str(object=request.url)
+            if (
+                method == request.method
+                and url_pattern.fullmatch(string=str(object=request.url)) is not None
             ):
                 return httpx2.Response(
                     status_code=status_code,
@@ -527,7 +554,7 @@ def create_httpx2_transport(
 @beartype
 def add_openapi_to_responses(
     *,
-    spec: dict[str, Any],
+    spec: Mapping[str, object],
     base_url: str,
     mock: responses.RequestsMock | None = None,
 ) -> None:
@@ -546,7 +573,7 @@ def add_openapi_to_responses(
     if parsed is None:
         return
 
-    add_fn = (mock or responses).add
+    add_fn = mock.add if mock is not None else responses.add
     components = parsed.components
 
     for path, method, operation in _iter_operations(parsed=parsed):
@@ -556,7 +583,7 @@ def add_openapi_to_responses(
         )
         code = int(status_code) if isinstance(status_code, HTTPStatus) else status_code
         url_pattern = _path_to_url_pattern(base_url=base_url, path=path)
-        add_fn(
+        _ = add_fn(
             method=method.upper(),
             url=re.compile(pattern=f"^{url_pattern}(?:\\?.*)?$"),
             json=json_body,
