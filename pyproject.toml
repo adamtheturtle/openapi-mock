@@ -32,6 +32,7 @@ urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentati
 
 [dependency-groups]
 dev = [
+    "snapper-fmt==0.11.0",
     "actionlint-py==1.7.12.24",
     "check-manifest==0.51",
     "deptry==0.25.1",
@@ -76,10 +77,6 @@ dev = [
     "zizmor==1.30.0",
 ]
 release = [ "check-wheel-contents==0.6.3", "towncrier==26.9.0" ]
-snapper = [
-    "snapper-fmt==0.11.0",
-]
-
 [tool.setuptools]
 packages.find.where = [ "src" ]
 package-data.openapi_mock = [ "py.typed" ]
