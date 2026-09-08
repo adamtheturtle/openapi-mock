@@ -26,7 +26,7 @@ _RequestParams = Mapping[str, bool | float | int | str | None]
 
 def _params_or_empty(*, params: _RequestParams | None) -> _RequestParams:
     """Return an empty request body when parameters are absent."""
-    return {} if params is None else params  # ty: ignore[unsound-return-statement]
+    return dict[str, bool | float | int | str | None]() if params is None else params
 
 
 @beartype
