@@ -3,7 +3,7 @@
 import re
 from collections.abc import Iterator, Mapping
 from http import HTTPStatus
-from typing import TypeGuard, cast
+from typing import TypeGuard
 
 import httpx
 import httpx2
@@ -426,11 +426,14 @@ def _iter_operations(
     if paths is None:
         return
     for path, path_item in paths.items():
-        for method in _HTTP_METHODS:
-            operation = cast(
-                Operation | None,
-                getattr(path_item, method, None),  # pylint: disable=bad-builtin
-            )
+        operations = (
+            ("get", path_item.get),
+            ("post", path_item.post),
+            ("put", path_item.put),
+            ("delete", path_item.delete),
+            ("patch", path_item.patch),
+        )
+        for method, operation in operations:
             if operation is not None:
                 yield path, method, operation
 
