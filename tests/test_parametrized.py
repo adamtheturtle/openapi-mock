@@ -1238,6 +1238,42 @@ def test_path_item_unknown_key(backend: str) -> None:
 
 
 @_BACKEND
+@pytest.mark.parametrize(
+    argnames="method",
+    argvalues=[HTTPMethod.HEAD, HTTPMethod.OPTIONS, HTTPMethod.TRACE],
+)
+def test_head_options_and_trace_operations(
+    backend: str,
+    method: HTTPMethod,
+) -> None:
+    """HEAD, OPTIONS, and TRACE operations are registered."""
+    spec: Mapping[str, object] = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/pets": {
+                method.value.lower(): {
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                        },
+                    },
+                },
+            },
+        },
+    }
+    response = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=method,
+        params=None,
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+
+@_BACKEND
 def test_unparseable_spec(backend: str) -> None:
     """Spec that fails model_validate after preprocessing does not crash."""
     spec: Mapping[str, object] = {
