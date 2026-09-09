@@ -23,19 +23,6 @@ from openapi_pydantic import Response as OAResponse
 from openapi_pydantic.v3.v3_1.datatype import DataType
 from pydantic import ValidationError
 
-_HTTP_METHODS = ("get", "post", "put", "delete", "patch")
-
-# Keys that are valid on a PathItem besides HTTP methods.
-_PATH_ITEM_NON_METHOD_KEYS = frozenset(
-    {
-        "summary",
-        "description",
-        "servers",
-        "parameters",
-        "$ref",
-    }
-)
-
 
 def _is_dict(value: object, /) -> TypeGuard[dict[str, object]]:
     """Narrow a dictionary to string-keyed OpenAPI data."""
@@ -136,19 +123,23 @@ def _preprocess_spec(*, spec: Mapping[str, object]) -> dict[str, object]:
             continue
         typed_path_item: dict[str, object] = path_item
         new_path_item: dict[str, object] = {}
-        for method_key, value in typed_path_item.items():
-            if method_key.lower() in _HTTP_METHODS:
-                if not _is_dict(value):
-                    continue
+        for key, value in typed_path_item.items():
+            if _is_dict(value):
                 op_copy: dict[str, object] = dict(value)
                 raw_resp = op_copy.get("responses")
                 if _is_responses_dict(raw_resp):
                     op_copy["responses"] = _preprocess_responses(
                         raw_responses=raw_resp,
                     )
-                new_path_item[method_key] = op_copy
-            elif method_key in _PATH_ITEM_NON_METHOD_KEYS:
-                new_path_item[method_key] = value
+                new_path_item[key] = op_copy
+            elif key in {
+                "$ref",
+                "description",
+                "parameters",
+                "servers",
+                "summary",
+            }:
+                new_path_item[key] = value
         new_paths[path_key] = new_path_item
     result["paths"] = new_paths
     return result
@@ -432,6 +423,9 @@ def _iter_operations(
             ("put", path_item.put),
             ("delete", path_item.delete),
             ("patch", path_item.patch),
+            ("head", path_item.head),
+            ("options", path_item.options),
+            ("trace", path_item.trace),
         )
         for method, operation in operations:
             if operation is not None:
@@ -589,6 +583,13 @@ def add_openapi_to_responses(
         )
         code = int(status_code) if isinstance(status_code, HTTPStatus) else status_code
         url_pattern = _path_to_url_pattern(base_url=base_url, path=path)
+        if method == "head":
+            _ = add_fn(
+                method=method.upper(),
+                url=re.compile(pattern=f"^{url_pattern}(?:\\?.*)?$"),
+                status=code,
+            )
+            continue
         _ = add_fn(
             method=method.upper(),
             url=re.compile(pattern=f"^{url_pattern}(?:\\?.*)?$"),
