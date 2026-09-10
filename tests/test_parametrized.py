@@ -461,6 +461,58 @@ def test_examples_fallback_to_schema(
 
 
 @_BACKEND
+@pytest.mark.parametrize(
+    argnames="example_content",
+    argvalues=[
+        pytest.param({"example": object()}, id="example"),
+        pytest.param(
+            {"examples": {"invalid": {"value": object()}}},
+            id="examples",
+        ),
+    ],
+)
+def test_non_json_example_falls_back_to_schema(
+    backend: str,
+    example_content: Mapping[str, object],
+) -> None:
+    """A non-JSON example does not prevent generation from the schema."""
+    spec = {
+        "openapi": "3.1.0",
+        "paths": {
+            "/pets": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    **example_content,
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "integer"},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    resp = _run(
+        backend=backend,
+        spec=spec,
+        url=f"{BASE_URL}/pets",
+        base_url=BASE_URL,
+        method=HTTPMethod.GET,
+        params=None,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json() == {"id": 0}
+
+
+@_BACKEND
 def test_generates_from_schema_when_no_example(backend: str) -> None:
     """Mock data is generated from schema when no example is present."""
     spec = {
