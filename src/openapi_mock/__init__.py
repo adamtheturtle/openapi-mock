@@ -21,7 +21,17 @@ from openapi_pydantic import (
 )
 from openapi_pydantic import Response as OAResponse
 from openapi_pydantic.v3.v3_1.datatype import DataType
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
+
+type _JSONValue = (
+    bool | int | float | str | list[_JSONValue] | dict[str, _JSONValue] | None
+)
+_JSON_VALUE_ADAPTER = TypeAdapter[_JSONValue](type=_JSONValue)
+
+
+def _validated_json_value(*, value: object) -> _JSONValue:
+    """Return a value after validating that it can be encoded as JSON."""
+    return _JSON_VALUE_ADAPTER.validate_python(value, strict=True)
 
 
 def _is_dict(value: object, /) -> TypeGuard[dict[str, object]]:
@@ -236,9 +246,9 @@ def _resolve_example_ref(
 @beartype
 def _generate_object_from_schema(
     *, schema: Schema, components: Components | None
-) -> dict[str, object]:
+) -> dict[str, _JSONValue]:
     """Generate a mock JSON object from schema properties."""
-    result: dict[str, object] = {}
+    result: dict[str, _JSONValue] = {}
     properties = schema.properties
     if properties is None:
         return result
@@ -260,7 +270,7 @@ def _generate_from_schema(
     *,
     schema: Schema,
     components: Components | None,
-) -> object:
+) -> _JSONValue:
     """Generate mock JSON from a Schema model.
 
     Handles type, properties, items. Supports type as array (OpenAPI 3.1).
@@ -292,7 +302,7 @@ def _generate_from_schema(
                         components=components,
                     )
                 ]
-        return list[object]()
+        return []
     if schema_type == DataType.STRING:
         return ""
     if schema_type in (DataType.NUMBER, DataType.INTEGER):
@@ -301,7 +311,7 @@ def _generate_from_schema(
         return False
     if schema_type == DataType.NULL:
         return None
-    return dict[str, object]()
+    return {}
 
 
 @beartype
@@ -309,14 +319,17 @@ def _get_example_from_content(
     *,
     media_type: MediaType,
     components: Components | None,
-) -> object | None:
+) -> _JSONValue:
     """Get example value from a MediaType.
 
     Checks OpenAPI 3.0 example then 3.1 examples. Returns None if not found.
     """
     if media_type.example is not None:
         example_value: object = media_type.example
-        return example_value
+        try:
+            return _validated_json_value(value=example_value)
+        except ValidationError:
+            return None
     examples = media_type.examples
     if examples is None or len(examples) == 0:
         return None
@@ -327,7 +340,10 @@ def _get_example_from_content(
     )
     if resolved is not None and resolved.value is not None:
         resolved_value: object = resolved.value
-        return resolved_value
+        try:
+            return _validated_json_value(value=resolved_value)
+        except ValidationError:
+            return None
     return None
 
 
@@ -354,7 +370,7 @@ def _get_response_body(
     *,
     operation: Operation,
     components: Components | None,
-) -> tuple[int | HTTPStatus, object]:
+) -> tuple[int | HTTPStatus, _JSONValue]:
     """Get (status_code, json_body) for the best response in an operation.
 
     Prefers 200, then 201, then first 2xx, then first response.
@@ -362,7 +378,7 @@ def _get_response_body(
     """
     raw_responses = operation.responses
     if raw_responses is None or len(raw_responses) == 0:
-        return HTTPStatus.OK, dict[str, object]()
+        return HTTPStatus.OK, {}
 
     status_key = _select_status_key(raw_responses=raw_responses)
 
@@ -380,14 +396,14 @@ def _get_response_body(
         components=components,
     )
     if response is None:
-        return default_status, dict[str, object]()
+        return default_status, {}
 
     content = response.content
     if content is None:
-        return default_status, dict[str, object]()
+        return default_status, {}
     media = content.get("application/json")
     if media is None:
-        return default_status, dict[str, object]()
+        return default_status, {}
 
     example = _get_example_from_content(media_type=media, components=components)
     if example is not None:
@@ -404,7 +420,7 @@ def _get_response_body(
                 schema=resolved,
                 components=components,
             )
-    return default_status, dict[str, object]()
+    return default_status, {}
 
 
 @beartype
@@ -511,7 +527,7 @@ def create_httpx2_transport(
     :return: A mock transport for ``httpx2.Client`` or
         ``httpx2.AsyncClient``.
     """
-    routes: list[tuple[str, re.Pattern[str], int, object]] = []
+    routes: list[tuple[str, re.Pattern[str], int, _JSONValue]] = []
     parsed = _parse_spec(spec=spec)
     if parsed is not None:
         components = parsed.components
