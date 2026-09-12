@@ -29,16 +29,19 @@ type _JSONValue = (
 _JSON_VALUE_ADAPTER = TypeAdapter[_JSONValue](type=_JSONValue)
 
 
+@beartype
 def _validated_json_value(*, value: object) -> _JSONValue:
     """Return a value after validating that it can be encoded as JSON."""
     return _JSON_VALUE_ADAPTER.validate_python(value, strict=True)
 
 
+@beartype
 def _is_dict(value: object, /) -> TypeGuard[dict[str, object]]:
     """Narrow a dictionary to string-keyed OpenAPI data."""
     return isinstance(value, dict)
 
 
+@beartype
 def _is_responses_dict(value: object, /) -> TypeGuard[dict[str | int, object]]:
     """Narrow a dictionary to an OpenAPI responses mapping."""
     return isinstance(value, dict)
