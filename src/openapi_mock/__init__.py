@@ -281,40 +281,46 @@ def _generate_from_schema(
     """
     schema_type = schema.type
     # OpenAPI 3.1 / JSON Schema 2020-12: type can be array, e.g. ["string", "null"]
-    if isinstance(schema_type, list) and len(schema_type) > 0:
-        schema_type = next(
-            (t for t in schema_type if t != DataType.NULL),
-            schema_type[0],
-        )
-    if schema_type == DataType.OBJECT:
-        return _generate_object_from_schema(
-            schema=schema,
-            components=components,
-        )
-    if schema_type == DataType.ARRAY:
-        items = schema.items
-        if items is not None:
-            resolved = _resolve_schema_ref(
-                ref_or_obj=items,
+    match schema_type:
+        case [*schema_types] if len(schema_types) > 0:
+            schema_type = next(
+                (item for item in schema_types if item != DataType.NULL),
+                schema_types[0],
+            )
+        case _:
+            pass
+
+    match schema_type:
+        case DataType.OBJECT:
+            return _generate_object_from_schema(
+                schema=schema,
                 components=components,
             )
-            if resolved is not None:
-                return [
-                    _generate_from_schema(
-                        schema=resolved,
-                        components=components,
-                    )
-                ]
-        return []
-    if schema_type == DataType.STRING:
-        return ""
-    if schema_type in (DataType.NUMBER, DataType.INTEGER):
-        return 0
-    if schema_type == DataType.BOOLEAN:
-        return False
-    if schema_type == DataType.NULL:
-        return None
-    return {}
+        case DataType.ARRAY:
+            items = schema.items
+            if items is not None:
+                resolved = _resolve_schema_ref(
+                    ref_or_obj=items,
+                    components=components,
+                )
+                if resolved is not None:
+                    return [
+                        _generate_from_schema(
+                            schema=resolved,
+                            components=components,
+                        )
+                    ]
+            return []
+        case DataType.STRING:
+            return ""
+        case DataType.NUMBER | DataType.INTEGER:
+            return 0
+        case DataType.BOOLEAN:
+            return False
+        case DataType.NULL:
+            return None
+        case _:
+            return {}
 
 
 @beartype
