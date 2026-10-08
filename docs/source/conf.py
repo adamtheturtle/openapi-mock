@@ -39,6 +39,7 @@ release = ".".join(
 )
 
 extensions = [
+    "myst_parser",
     "sphinx_copybutton",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
@@ -49,9 +50,9 @@ extensions = [
 ]
 
 # Render the unreleased ``newsfragments/`` entries into
-# ``docs/source/unreleased.rst`` so the Sphinx spelling, doc-build and
+# ``docs/source/unreleased.md`` so the Sphinx spelling, doc-build and
 # link-checking gates cover the prose before it is assembled into
-# CHANGELOG.rst at release time.
+# the versioned Markdown notes at release time.
 towncrier_draft_autoversion_mode = "draft"
 towncrier_draft_include_empty = True
 towncrier_draft_working_directory = f"{_pyproject_file.parent}"
