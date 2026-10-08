@@ -133,7 +133,6 @@ def _setup(*, backend: str, spec: Mapping[str, object], base_url: str) -> None:
 _BACKEND = pytest.mark.parametrize(
     argnames="backend",
     argvalues=["respx", "responses", "httpx2"],
-    ids=["respx", "responses", "httpx2"],
 )
 
 
