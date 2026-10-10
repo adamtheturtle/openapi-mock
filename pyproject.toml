@@ -20,7 +20,7 @@ classifiers = [
 ]
 dynamic = [ "version" ]
 dependencies = [
-    "beartype>=0.18",
+    "beartype>=0.23.0",
     "httpx>=0.27.0",
     "httpx2>=2.12.0",
     "openapi-pydantic>=0.5.0",
@@ -33,7 +33,7 @@ urls = { Homepage = "https://github.com/adamtheturtle/openapi-mock", Documentati
 [dependency-groups]
 dev = [
     "actionlint-py==1.7.12.25",
-    "beartype==0.23.0rc2",
+    "beartype==0.23.0",
     "check-manifest==0.51",
     "deptry==0.25.1",
     "doc8==2.0.0",
@@ -247,9 +247,7 @@ analysis.strict-equality-semantics = true
 analysis.strict-generic-narrowing = true
 
 [tool.pytest]
-# Source functions already use @beartype. Enable beartype_packages for
-# openapi_mock once the import hook no longer adds false missing branches
-# to the 100% coverage gate: https://github.com/beartype/beartype/issues/706
+beartype_packages = [ "openapi_mock" ]
 beartype_test_fixtures = true
 beartype_tests = true
 log_cli = true
