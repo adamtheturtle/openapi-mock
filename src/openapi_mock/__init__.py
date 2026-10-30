@@ -21,16 +21,13 @@ from openapi_pydantic import (
 )
 from openapi_pydantic import Response as OAResponse
 from openapi_pydantic.v3.v3_1.datatype import DataType
-from pydantic import TypeAdapter, ValidationError
+from pydantic import JsonValue, TypeAdapter, ValidationError
 
-type _JSONValue = (
-    bool | int | float | str | list[_JSONValue] | dict[str, _JSONValue] | None
-)
-_JSON_VALUE_ADAPTER = TypeAdapter[_JSONValue](type=_JSONValue)
+_JSON_VALUE_ADAPTER = TypeAdapter[JsonValue](type=JsonValue)
 
 
 @beartype
-def _validated_json_value(*, value: object) -> _JSONValue:
+def _validated_json_value(*, value: object) -> JsonValue:
     """Return a value after validating that it can be encoded as JSON."""
     return _JSON_VALUE_ADAPTER.validate_python(value, strict=True)
 
@@ -249,9 +246,9 @@ def _resolve_example_ref(
 @beartype
 def _generate_object_from_schema(
     *, schema: Schema, components: Components | None
-) -> dict[str, _JSONValue]:
+) -> dict[str, JsonValue]:
     """Generate a mock JSON object from schema properties."""
-    result: dict[str, _JSONValue] = {}
+    result: dict[str, JsonValue] = {}
     properties = schema.properties
     if properties is None:
         return result
@@ -273,7 +270,7 @@ def _generate_from_schema(
     *,
     schema: Schema,
     components: Components | None,
-) -> _JSONValue:
+) -> JsonValue:
     """Generate mock JSON from a Schema model.
 
     Handles type, properties, items. Supports type as array (OpenAPI 3.1).
@@ -328,7 +325,7 @@ def _get_example_from_content(
     *,
     media_type: MediaType,
     components: Components | None,
-) -> _JSONValue:
+) -> JsonValue:
     """Get example value from a MediaType.
 
     Checks OpenAPI 3.0 example then 3.1 examples. Returns None if not found.
@@ -379,7 +376,7 @@ def _get_response_body(
     *,
     operation: Operation,
     components: Components | None,
-) -> tuple[int | HTTPStatus, _JSONValue]:
+) -> tuple[int | HTTPStatus, JsonValue]:
     """Get (status_code, json_body) for the best response in an operation.
 
     Prefers 200, then 201, then first 2xx, then first response.
@@ -536,7 +533,7 @@ def create_httpx2_transport(
     :return: A mock transport for ``httpx2.Client`` or
         ``httpx2.AsyncClient``.
     """
-    routes: list[tuple[str, re.Pattern[str], int, _JSONValue]] = []
+    routes: list[tuple[str, re.Pattern[str], int, JsonValue]] = []
     parsed = _parse_spec(spec=spec)
     if parsed is not None:
         components = parsed.components
