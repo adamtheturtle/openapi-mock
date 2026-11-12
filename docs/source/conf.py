@@ -4,7 +4,7 @@ import importlib.metadata
 import os
 from pathlib import Path
 
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import Specifier, SpecifierSet
 from packaging.version import Version
 from sphinx_pyproject import SphinxConfig
 
@@ -20,6 +20,7 @@ author = _pyproject_config.author
 # Validate version - reject 0.x (indicates missing git tags), except in CI
 _version_string = importlib.metadata.version(distribution_name=project)
 _version = Version(version=_version_string)
+msg: str
 if _version.release[0] == 0 and "CI" not in os.environ:
     msg = (
         f"The version is {_version_string}. "
@@ -31,7 +32,7 @@ if _version.release[0] == 0 and "CI" not in os.environ:
 
 # Format release string for Calver (YYYY.MM.DD)
 _num_date_parts = 3
-release = ".".join(
+release: str = ".".join(
     [
         f"{part:02d}" if index < _num_date_parts else str(object=part)
         for index, part in enumerate(iterable=_version.release)
@@ -63,9 +64,12 @@ project_copyright = f"%Y, {author}"
 
 copybutton_exclude = ".linenos, .gp"
 
-project_metadata = importlib.metadata.metadata(distribution_name=project)
+project_metadata: importlib.metadata.PackageMetadata = importlib.metadata.metadata(
+    distribution_name=project
+)
 requires_python = project_metadata["Requires-Python"]
-specifiers = SpecifierSet(specifiers=requires_python)
+specifiers: SpecifierSet = SpecifierSet(specifiers=requires_python)
+specifier: Specifier
 (specifier,) = specifiers
 if specifier.operator != ">=":
     msg = f"We only support '>=' for Requires-Python, got {specifier.operator}."
