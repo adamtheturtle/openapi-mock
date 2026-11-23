@@ -330,8 +330,8 @@ def _get_example_from_content(
 
     Checks OpenAPI 3.0 example then 3.1 examples. Returns None if not found.
     """
-    if media_type.example is not None:
-        example_value: object = media_type.example
+    example_value: object = media_type.example
+    if example_value is not None:
         try:
             return _validated_json_value(value=example_value)
         except ValidationError:
@@ -344,13 +344,13 @@ def _get_example_from_content(
         ref_or_obj=first_ex_or_ref,
         components=components,
     )
-    if resolved is not None and resolved.value is not None:
-        resolved_value: object = resolved.value
-        try:
-            return _validated_json_value(value=resolved_value)
-        except ValidationError:
-            return None
-    return None
+    if resolved is None:
+        return None
+    resolved_value: object = resolved.value
+    try:
+        return _validated_json_value(value=resolved_value)
+    except ValidationError:
+        return None
 
 
 @beartype
