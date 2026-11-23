@@ -20,11 +20,15 @@ from openapi_mock import (
 )
 
 
-class _AsyncGetClient(Protocol):
-    """The async client interface used by the transport test."""
+class _AsyncRequestClient(Protocol):
+    """The asynchronous client interface used by the transport test."""
 
-    def get(self, *, url: str) -> Awaitable[httpx2.Response]:
-        """Request a URL."""
+    def build_request(self, *, method: str, url: str) -> httpx2.Request:
+        """Build a request using the client configuration."""
+        ...
+
+    def send(self, *, request: httpx2.Request) -> Awaitable[httpx2.Response]:
+        """Send the request through the client transport."""
         ...
 
 
@@ -185,8 +189,9 @@ def test_httpx2_transport_supports_async_clients() -> None:
     async def request() -> httpx2.Response:
         """Make an asynchronous request through the native transport."""
         async with httpx2.AsyncClient(transport=transport) as client:
-            get_client: _AsyncGetClient = client
-            return await get_client.get(url=f"{BASE_URL}/pets")
+            request_client: _AsyncRequestClient = client
+            request = request_client.build_request(method="GET", url=f"{BASE_URL}/pets")
+            return await request_client.send(request=request)
 
     pending: Coroutine[object, object, httpx2.Response] = request()
     response = asyncio.run(main=pending)
