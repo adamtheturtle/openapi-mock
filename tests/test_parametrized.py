@@ -1,8 +1,9 @@
 """Parametrized tests that run with every supported backend."""
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Awaitable, Coroutine, Mapping
 from http import HTTPMethod, HTTPStatus
+from typing import Protocol
 
 import httpx
 import httpx2
@@ -17,6 +18,19 @@ from openapi_mock import (
     add_openapi_to_respx,
     create_httpx2_transport,
 )
+
+
+class _AsyncRequestClient(Protocol):
+    """The asynchronous client interface used by the transport test."""
+
+    def build_request(self, *, method: str, url: str) -> httpx2.Request:
+        """Build a request using the client configuration."""
+        ...
+
+    def send(self, *, request: httpx2.Request) -> Awaitable[httpx2.Response]:
+        """Send the request through the client transport."""
+        ...
+
 
 BASE_URL = "https://api.example.com"
 
@@ -175,9 +189,12 @@ def test_httpx2_transport_supports_async_clients() -> None:
     async def request() -> httpx2.Response:
         """Make an asynchronous request through the native transport."""
         async with httpx2.AsyncClient(transport=transport) as client:
-            return await client.get(url=f"{BASE_URL}/pets")
+            request_client: _AsyncRequestClient = client
+            request = request_client.build_request(method="GET", url=f"{BASE_URL}/pets")
+            return await request_client.send(request=request)
 
-    response = asyncio.run(main=request())
+    pending: Coroutine[object, object, httpx2.Response] = request()
+    response = asyncio.run(main=pending)
 
     assert isinstance(response, httpx2.Response)
     assert response.status_code == HTTPStatus.OK
